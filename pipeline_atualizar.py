@@ -128,7 +128,13 @@ def main():
 
     mes_abrev = ad.MES_ABREV[hoje.month]
     nome_consolidado = f"Base_Jan_{mes_abrev}.xlsx"
-    consolidado_path = consolidar(arquivos, ONEDRIVE_ANALISE_ANSELL / nome_consolidado)
+    # No seu PC, guarda o consolidado no OneDrive (como no processo manual).
+    # Na nuvem (GitHub Actions) essa pasta nao existe — usa uma pasta local.
+    if ONEDRIVE_ANALISE_ANSELL.parent.exists():
+        destino_consolidado = ONEDRIVE_ANALISE_ANSELL / nome_consolidado
+    else:
+        destino_consolidado = REPO_DIR / "downloads_tmp" / nome_consolidado
+    consolidado_path = consolidar(arquivos, destino_consolidado)
 
     atualizar_html(consolidado_path)
     commit_e_push()
