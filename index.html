@@ -270,7 +270,7 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: EXPECTATIVA -->
 <div id="tab-expectativa" class="content">
   <div class="table-card" style="padding:16px 20px 16px">
-    <h3 style="margin-bottom:14px">Expectativa de Volumetria e Faturamento — Set–Dez/2026</h3>
+    <h3 style="margin-bottom:14px">Expectativa de Volumetria e Faturamento — Jan–Dez/2026</h3>
     <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center">
       <span style="font-size:.78rem;color:#64748b;font-weight:600;margin-right:4px">Exibir:</span>
       <button class="exp-btn active" id="exp-btn-total" onclick="setExpCliente('total')">Total</button>
@@ -381,12 +381,28 @@ const MES_NOMES = {};
 // Keys: 'ansell' = ANSELL client, 'hercules' = HERCULES client
 const EXPECT_DATA = {
   ansell: [
+    {mes:'2026-01',label:'Jan/2026',volPrev:13244,fatPrev:272053.19},
+    {mes:'2026-02',label:'Fev/2026',volPrev:9345,fatPrev:243397.51},
+    {mes:'2026-03',label:'Mar/2026',volPrev:17607,fatPrev:316317.19},
+    {mes:'2026-04',label:'Abr/2026',volPrev:8731,fatPrev:222903.97},
+    {mes:'2026-05',label:'Mai/2026',volPrev:12532,fatPrev:261400.08},
+    {mes:'2026-06',label:'Jun/2026',volPrev:12213,fatPrev:224401.9},
+    {mes:'2026-07',label:'Jul/2026',volPrev:14063,fatPrev:300826.04},
+    {mes:'2026-08',label:'Ago/2026',volPrev:8876,fatPrev:260313.1},
     {mes:'2026-09',label:'Set/2026',volPrev:12468,fatPrev:310078.61},
     {mes:'2026-10',label:'Out/2026',volPrev:14416,fatPrev:317020.16},
     {mes:'2026-11',label:'Nov/2026',volPrev:14669,fatPrev:264712.31},
     {mes:'2026-12',label:'Dez/2026',volPrev:18650,fatPrev:331251.27},
   ],
   hercules: [
+    {mes:'2026-01',label:'Jan/2026',volPrev:4972,fatPrev:73233.44},
+    {mes:'2026-02',label:'Fev/2026',volPrev:6400,fatPrev:85405.83},
+    {mes:'2026-03',label:'Mar/2026',volPrev:6966,fatPrev:82358.45},
+    {mes:'2026-04',label:'Abr/2026',volPrev:9645,fatPrev:224703.53},
+    {mes:'2026-05',label:'Mai/2026',volPrev:10694,fatPrev:101222.87},
+    {mes:'2026-06',label:'Jun/2026',volPrev:6484,fatPrev:81628.7},
+    {mes:'2026-07',label:'Jul/2026',volPrev:9613,fatPrev:99420.99},
+    {mes:'2026-08',label:'Ago/2026',volPrev:3324,fatPrev:115324.86},
     {mes:'2026-09',label:'Set/2026',volPrev:8531,fatPrev:125918.35},
     {mes:'2026-10',label:'Out/2026',volPrev:7881,fatPrev:176827.31},
     {mes:'2026-11',label:'Nov/2026',volPrev:8135,fatPrev:124160.26},
@@ -987,8 +1003,8 @@ function setExpCliente(cli) {
 }
 
 function renderExpectativa() {
-  const MESES = ['2026-09','2026-10','2026-11','2026-12'];
-  const LABELS = ['Set/2026','Out/2026','Nov/2026','Dez/2026'];
+  const MESES = ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12'];
+  const LABELS = ['Jan/2026','Fev/2026','Mar/2026','Abr/2026','Mai/2026','Jun/2026','Jul/2026','Ago/2026','Set/2026','Out/2026','Nov/2026','Dez/2026'];
 
   // Determine which CLIENTE values to filter (match by substring, case-insensitive)
   function getClienteKeys(cli) {
