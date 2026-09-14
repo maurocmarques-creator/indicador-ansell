@@ -9,18 +9,24 @@ pipeline_atualizar.py — Pipeline completo do Indicador Ansell:
   4. Faz commit + push (so se algo realmente mudou)
 
 Credenciais do portal vem de PORTAL_USER / PORTAL_PASS (variaveis de
-ambiente) — nunca ficam no codigo.
+ambiente) — nunca ficam no codigo. O envio de e-mail de notificacao usa
+EMAIL_USER / EMAIL_PASS (conta Office365/Outlook), tambem via variavel
+de ambiente.
 
 Uso:
   set PORTAL_USER=seu.usuario
   set PORTAL_PASS=sua.senha
+  set EMAIL_USER=seu.email@portoex.com.br
+  set EMAIL_PASS=sua.senha.de.email
   python pipeline_atualizar.py
 """
 
 import os
+import smtplib
 import subprocess
 import sys
 from datetime import date, timedelta
+from email.message import EmailMessage
 from pathlib import Path
 
 import pandas as pd
@@ -33,6 +39,9 @@ REPO_DIR = Path(__file__).parent
 ONEDRIVE_ANALISE_ANSELL = Path(
     r"C:\Users\Mauro Cesar Marques\OneDrive - PORTOEXPRESS LOGISTICA LTDA\Analise Ansell"
 )
+SMTP_HOST = "smtp.office365.com"
+SMTP_PORT = 587
+EMAIL_DESTINO = "mauro.cesar@portoex.com.br"
 
 
 def log(msg):
@@ -114,6 +123,29 @@ def commit_e_push():
     return True
 
 
+def enviar_email(assunto, corpo):
+    remetente = os.environ.get("EMAIL_USER")
+    senha = os.environ.get("EMAIL_PASS")
+    if not remetente or not senha:
+        log("EMAIL_USER/EMAIL_PASS nao definidos — notificacao por e-mail pulada.")
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = assunto
+    msg["From"] = remetente
+    msg["To"] = EMAIL_DESTINO
+    msg.set_content(corpo)
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
+            smtp.starttls()
+            smtp.login(remetente, senha)
+            smtp.send_message(msg)
+        log(f"E-mail de notificacao enviado para {EMAIL_DESTINO}.")
+    except Exception as e:
+        log(f"Falha ao enviar e-mail de notificacao: {e}")
+
+
 def main():
     usuario = os.environ.get("PORTAL_USER")
     senha = os.environ.get("PORTAL_PASS")
@@ -140,7 +172,14 @@ def main():
     consolidado_path = consolidar(arquivos, destino_consolidado)
 
     atualizar_html(consolidado_path)
-    commit_e_push()
+    houve_atualizacao = commit_e_push()
+
+    if houve_atualizacao:
+        link = "https://maurocmarques-creator.github.io/indicador-ansell/"
+        enviar_email(
+            "Indicador Ansell atualizado",
+            f"O dashboard foi atualizado com sucesso.\n\nAcesse: {link}",
+        )
 
     log("\nPipeline concluido.")
 
