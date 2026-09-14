@@ -44,15 +44,26 @@ def extrair_arquivos(usuario, senha, data_ini, data_fim, pasta_tmp: Path) -> dic
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(accept_downloads=True)
         page = context.new_page()
-        page.set_default_timeout(30000)
+        page.set_default_timeout(60000)
 
-        ep.login(page, usuario, senha)
+        try:
+            ep.login(page, usuario, senha)
 
-        arquivos = {}
-        for cliente in ep.CLIENTES:
-            arquivos[cliente] = ep.extrair_cliente(page, cliente, data_ini, data_fim, pasta_tmp)
-
-        browser.close()
+            arquivos = {}
+            for cliente in ep.CLIENTES:
+                arquivos[cliente] = ep.extrair_cliente(page, cliente, data_ini, data_fim, pasta_tmp)
+        except Exception:
+            diag_dir = pasta_tmp / "diagnostico"
+            diag_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                page.screenshot(path=str(diag_dir / "falha.png"), full_page=True)
+                (diag_dir / "falha.html").write_text(page.content(), encoding="utf-8")
+                log(f"Diagnostico salvo em: {diag_dir}")
+            except Exception as diag_err:
+                log(f"Nao foi possivel salvar diagnostico: {diag_err}")
+            raise
+        finally:
+            browser.close()
     return arquivos
 
 

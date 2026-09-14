@@ -142,7 +142,7 @@ def main():
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(accept_downloads=True)
         page = context.new_page()
-        page.set_default_timeout(30000)
+        page.set_default_timeout(60000)
 
         login(page, usuario, senha)
 
