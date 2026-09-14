@@ -47,21 +47,30 @@ def iso(d):
     return d.strftime('%Y-%m-%d')
 
 
-def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento, hoje):
+def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo=''):
     if tipo_emissao == 'DEVOLUCAO':
         return 'DEVOLUCAO'
     if tipo_emissao == 'REENTREGA':
         return 'REENTREGA'
     efetivo = data_agendamento if not pd.isna(data_agendamento) else prev_entrega
-    if pd.isna(data_entrega):
-        # Sem baixa (ainda nao entregue): compara hoje contra o prazo
-        # (agendamento, se tiver; senao a propria previsao de entrega).
+
+    # A "DATA ENTREGA" as vezes fica em branco mesmo com a entrega ja
+    # confirmada na descricao da ultima ocorrencia — nesses casos nao e
+    # "Em Transito" de verdade, e sim uma entrega sem a data batida no
+    # sistema. Usamos hoje como data de referencia (nao temos a data real).
+    descricao_ultimo = (descricao_ultimo or '')
+    entregue_sem_data = pd.isna(data_entrega) and 'ENTREGA REALIZADA NORMALMENTE' in descricao_ultimo.upper()
+    data_ref = hoje if entregue_sem_data else data_entrega
+
+    if pd.isna(data_ref):
+        # Sem baixa e sem confirmacao de entrega: compara hoje contra o
+        # prazo (agendamento, se tiver; senao a propria previsao de entrega).
         if not pd.isna(efetivo) and hoje > efetivo:
             return 'EM TRANSITO FORA DO PRAZO'
         return 'EM TRANSITO DENTRO DO PRAZO'
     if pd.isna(efetivo):
         return 'EM ATRASO'
-    return 'NO PRAZO' if data_entrega <= efetivo else 'EM ATRASO'
+    return 'NO PRAZO' if data_ref <= efetivo else 'EM ATRASO'
 
 
 def find_tipo_emissao_col(df):
@@ -84,11 +93,13 @@ def build_rows(df, hoje=None):
         data_agendamento = r['DATA DE AGENDAMENTO']
         tipo = r[tipo_col]
         eff_uf = r['UF ENTREGA'] if not pd.isna(r['UF ENTREGA']) else ''
+        descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
+        descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
 
         rows.append({
             'MES': data_emissao.strftime('%Y-%m'),
             'MES_NOME': f"{MES_ABREV[data_emissao.month]}/{data_emissao.year}",
-            'STATUS': compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje),
+            'STATUS': compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo),
             'CLIENTE': r['CLIENTE'],
             'MINUTA': str(r['MINUTA']),
             'NF_DOC': str(r['NF/DOC']),
@@ -112,9 +123,7 @@ def build_rows(df, hoje=None):
             'DATA DE AGENDAMENTO': iso(data_agendamento),
             'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
             'EFF_CIDADE': r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else '',
-            # Campo novo no template do portal — pode nao existir em
-            # exportacoes antigas, entao le com valor padrao vazio.
-            'DESCRICAO_ULTIMO': r.get('DESCRICAO ULTIMO', '') if not pd.isna(r.get('DESCRICAO ULTIMO', '')) else '',
+            'DESCRICAO_ULTIMO': descricao_ultimo,
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': UF_CENTROID[eff_uf][0] if eff_uf in UF_CENTROID else None,
