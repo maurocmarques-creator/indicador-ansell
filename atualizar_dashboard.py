@@ -132,6 +132,16 @@ def build_raw(rows, gerado_em=None):
     }
 
 
+def read_json_blob(content, marker):
+    pos = content.find(marker)
+    if pos == -1:
+        return None
+    start = pos + len(marker)
+    decoder = json.JSONDecoder()
+    data, _ = decoder.raw_decode(content, start)
+    return data
+
+
 def replace_json_blob(content, marker, new_json):
     pos = content.find(marker)
     if pos == -1:

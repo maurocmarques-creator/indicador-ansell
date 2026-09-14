@@ -86,6 +86,12 @@ def consolidar(arquivos: dict, destino: Path) -> Path:
     return destino
 
 
+def _sem_timestamp(raw):
+    meta = dict(raw.get("meta", {}))
+    meta.pop("gerado_em", None)
+    return {"meta": meta, "rows": raw.get("rows")}
+
+
 def atualizar_html(xlsx_consolidado: Path):
     log("\nAtualizando index.html...")
     df = pd.read_excel(xlsx_consolidado, sheet_name="Brudam")
@@ -96,8 +102,16 @@ def atualizar_html(xlsx_consolidado: Path):
     import json
 
     index_path = REPO_DIR / "index.html"
-
     index_content = index_path.read_text(encoding="utf-8")
+
+    # Se os dados forem identicos aos ja publicados (fora do timestamp),
+    # mantem o "gerado_em" antigo para nao gerar um commit so por causa
+    # da hora em que o script rodou.
+    raw_antigo = ad.read_json_blob(index_content, "const RAW = ")
+    if raw_antigo and _sem_timestamp(raw_antigo) == _sem_timestamp(raw):
+        raw["meta"]["gerado_em"] = raw_antigo["meta"].get("gerado_em")
+        log("Dados iguais aos ja publicados — mantendo timestamp anterior.")
+
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = ad.replace_json_blob(index_content, "const RAW = ", raw_json)
     index_path.write_text(index_content, encoding="utf-8")
