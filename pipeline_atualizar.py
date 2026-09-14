@@ -25,7 +25,7 @@ import os
 import smtplib
 import subprocess
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -188,11 +188,17 @@ def main():
     atualizar_html(consolidado_path)
     houve_atualizacao = commit_e_push()
 
+    link = "https://maurocmarques-creator.github.io/indicador-ansell/"
+    agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     if houve_atualizacao:
-        link = "https://maurocmarques-creator.github.io/indicador-ansell/"
         enviar_email(
             "Indicador Ansell atualizado",
-            f"O dashboard foi atualizado com sucesso.\n\nAcesse: {link}",
+            f"O dashboard foi atualizado com dados novos em {agora}.\n\nAcesse: {link}",
+        )
+    else:
+        enviar_email(
+            "Indicador Ansell — rodou sem novidades",
+            f"A rotina rodou normalmente em {agora}, mas os dados nao mudaram desde a ultima vez.\n\nAcesse: {link}",
         )
 
     log("\nPipeline concluido.")
