@@ -112,6 +112,9 @@ def build_rows(df, hoje=None):
             'DATA DE AGENDAMENTO': iso(data_agendamento),
             'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
             'EFF_CIDADE': r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else '',
+            # Campo novo no template do portal — pode nao existir em
+            # exportacoes antigas, entao le com valor padrao vazio.
+            'DESCRICAO_ULTIMO': r.get('DESCRICAO ULTIMO', '') if not pd.isna(r.get('DESCRICAO ULTIMO', '')) else '',
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': UF_CENTROID[eff_uf][0] if eff_uf in UF_CENTROID else None,
