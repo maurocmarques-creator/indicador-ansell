@@ -139,7 +139,7 @@ def commit_e_push():
     return True
 
 
-def enviar_email(assunto, corpo):
+def enviar_email(assunto, corpo_html):
     remetente = os.environ.get("EMAIL_USER")
     senha = os.environ.get("EMAIL_PASS")
     if not remetente or not senha:
@@ -150,7 +150,7 @@ def enviar_email(assunto, corpo):
     msg["Subject"] = assunto
     msg["From"] = remetente
     msg["To"] = EMAIL_DESTINO
-    msg.set_content(corpo)
+    msg.set_content(corpo_html, subtype="html")
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
@@ -192,16 +192,12 @@ def main():
 
     link = "https://maurocmarques-creator.github.io/indicador-ansell/"
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-    if houve_atualizacao:
-        enviar_email(
-            "Indicador Ansell atualizado",
-            f"O dashboard foi atualizado com dados novos em {agora}.\n\nAcesse: {link}",
-        )
-    else:
-        enviar_email(
-            "Indicador Ansell — rodou sem novidades",
-            f"A rotina rodou normalmente em {agora}, mas os dados nao mudaram desde a ultima vez.\n\nAcesse: {link}",
-        )
+    situacao = "<b><u>COM ALTERAÇÃO DE DADOS</u></b>" if houve_atualizacao else "<b><u>SEM ALTERAÇÃO DE DADOS</u></b>"
+    corpo_html = (
+        f"<p>A rotina rodou normalmente em {agora}, {situacao}.</p>"
+        f"<p>Acesse: <a href='{link}'>{link}</a></p>"
+    )
+    enviar_email("Indicador Ansell - Atualizado com Sucesso", corpo_html)
 
     log("\nPipeline concluido.")
 
