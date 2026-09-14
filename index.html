@@ -285,10 +285,23 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="table-card" style="margin-bottom:16px">
     <h3 style="color:#991b1b">⚠ Fora do Prazo — precisam ser tratadas (ordenado por dias vencidos)</h3>
-    <div style="margin-bottom:10px">
-      <input id="search-transito-fora" type="text" placeholder="🔍 Filtrar por minuta, NF, cliente, destinatário, cidade ou descrição..."
-        style="border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:.8rem;width:380px"
-        oninput="renderTransito()">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Cliente</label>
+        <select id="ft-cliente" onchange="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todos</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Destinatário</label>
+        <select id="ft-dest" onchange="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todos</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Cidade/UF</label>
+        <select id="ft-cidade" onchange="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todas</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Descrição</label>
+        <select id="ft-desc" onchange="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todas</option></select>
+      </div>
     </div>
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Emissão</th><th>Prazo</th><th>Dias Vencidos</th><th>Descrição</th></tr></thead>
@@ -1076,15 +1089,34 @@ function renderTransito() {
     </tr>`;
   }
 
-  const searchFora = (document.getElementById('search-transito-fora').value||'').toLowerCase().trim();
-  const foraFiltrado = searchFora
-    ? fora.filter(r => [r.MINUTA, r.NF_DOC, r.CLIENTE, r.EFF_LOCAL, r.EFF_CIDADE, r.EFF_UF, r.DESCRICAO_ULTIMO]
-        .some(v => (v||'').toString().toLowerCase().includes(searchFora)))
-    : fora;
+  // Filtros em dropdown (Cliente / Destinatário / Cidade-UF / Descrição),
+  // com as opções populadas a partir do que existe em "Fora do Prazo".
+  function cidadeUf(r) { return r.EFF_CIDADE ? r.EFF_CIDADE+(r.EFF_UF?'/'+r.EFF_UF:'') : ''; }
+  function popularSelect(id, valores, atual) {
+    const sel = document.getElementById(id);
+    const opts = [...new Set(valores.filter(Boolean))].sort();
+    sel.innerHTML = `<option value="">${sel.options[0].text}</option>` +
+      opts.map(v=>`<option value="${v}"${v===atual?' selected':''}>${v}</option>`).join('');
+  }
+  const fCliente = document.getElementById('ft-cliente').value;
+  const fDest = document.getElementById('ft-dest').value;
+  const fCidade = document.getElementById('ft-cidade').value;
+  const fDesc = document.getElementById('ft-desc').value;
+  popularSelect('ft-cliente', fora.map(r=>r.CLIENTE), fCliente);
+  popularSelect('ft-dest', fora.map(r=>r.EFF_LOCAL), fDest);
+  popularSelect('ft-cidade', fora.map(cidadeUf), fCidade);
+  popularSelect('ft-desc', fora.map(r=>r.DESCRICAO_ULTIMO), fDesc);
+
+  const foraFiltrado = fora.filter(r =>
+    (!fCliente || r.CLIENTE===fCliente) &&
+    (!fDest || r.EFF_LOCAL===fDest) &&
+    (!fCidade || cidadeUf(r)===fCidade) &&
+    (!fDesc || r.DESCRICAO_ULTIMO===fDesc)
+  );
 
   document.getElementById('tb-transito-fora').innerHTML = foraFiltrado.length
     ? foraFiltrado.map(r=>rowHtml(r,'fora')).join('')
-    : `<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">${searchFora ? 'Nenhum resultado para "'+searchFora+'"' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
+    : `<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">${fora.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
   document.getElementById('tb-transito-dentro').innerHTML = dentro.length
     ? dentro.map(r=>rowHtml(r,'dentro')).join('')
     : '<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega em trânsito dentro do prazo</td></tr>';
