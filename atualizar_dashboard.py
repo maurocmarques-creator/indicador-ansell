@@ -47,14 +47,18 @@ def iso(d):
     return d.strftime('%Y-%m-%d')
 
 
-def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento):
+def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento, hoje):
     if tipo_emissao == 'DEVOLUCAO':
         return 'DEVOLUCAO'
     if tipo_emissao == 'REENTREGA':
         return 'REENTREGA'
-    if pd.isna(data_entrega):
-        return 'AGENDADO' if not pd.isna(data_agendamento) else 'EM TRÂNSITO'
     efetivo = data_agendamento if not pd.isna(data_agendamento) else prev_entrega
+    if pd.isna(data_entrega):
+        # Sem baixa (ainda nao entregue): compara hoje contra o prazo
+        # (agendamento, se tiver; senao a propria previsao de entrega).
+        if not pd.isna(efetivo) and hoje > efetivo:
+            return 'EM TRANSITO FORA DO PRAZO'
+        return 'EM TRANSITO DENTRO DO PRAZO'
     if pd.isna(efetivo):
         return 'EM ATRASO'
     return 'NO PRAZO' if data_entrega <= efetivo else 'EM ATRASO'
@@ -69,7 +73,8 @@ def find_tipo_emissao_col(df):
     return candidates[0]
 
 
-def build_rows(df):
+def build_rows(df, hoje=None):
+    hoje = pd.Timestamp(hoje) if hoje is not None else pd.Timestamp.now().normalize()
     tipo_col = find_tipo_emissao_col(df)
     rows = []
     for _, r in df.iterrows():
@@ -83,7 +88,7 @@ def build_rows(df):
         rows.append({
             'MES': data_emissao.strftime('%Y-%m'),
             'MES_NOME': f"{MES_ABREV[data_emissao.month]}/{data_emissao.year}",
-            'STATUS': compute_status(tipo, data_entrega, prev_entrega, data_agendamento),
+            'STATUS': compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje),
             'CLIENTE': r['CLIENTE'],
             'MINUTA': str(r['MINUTA']),
             'NF_DOC': str(r['NF/DOC']),
