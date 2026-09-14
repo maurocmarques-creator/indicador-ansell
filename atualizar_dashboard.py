@@ -12,6 +12,7 @@ import sys
 import re
 import json
 import unicodedata
+from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
 
@@ -114,7 +115,7 @@ def build_rows(df):
     return rows
 
 
-def build_raw(rows):
+def build_raw(rows, gerado_em=None):
     meses = sorted(set(r['MES'] for r in rows))
     tipos = sorted(set(r['TIPO EMISSÃO'] for r in rows))
     ufs = sorted(set(r['EFF_UF'] for r in rows if r['EFF_UF']))
@@ -125,6 +126,7 @@ def build_raw(rows):
             'tipos_emissao': tipos,
             'ufs': ufs,
             'clientes': clientes,
+            'gerado_em': gerado_em or datetime.now().strftime('%d/%m/%Y %H:%M'),
         },
         'rows': rows,
     }
@@ -156,6 +158,7 @@ def build_mobile_d(rows, meta):
         'tipos': tipos,
         'regioes': regioes,
         'agg': agg_rows,
+        'gerado_em': meta.get('gerado_em'),
     }
 
 
