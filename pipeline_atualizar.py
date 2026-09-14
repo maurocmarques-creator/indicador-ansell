@@ -10,14 +10,16 @@ pipeline_atualizar.py — Pipeline completo do Indicador Ansell:
 
 Credenciais do portal vem de PORTAL_USER / PORTAL_PASS (variaveis de
 ambiente) — nunca ficam no codigo. O envio de e-mail de notificacao usa
-EMAIL_USER / EMAIL_PASS (conta Office365/Outlook), tambem via variavel
-de ambiente.
+EMAIL_USER / EMAIL_PASS (conta Gmail + senha de app — o Office365 da
+PortoEx bloqueia autenticacao SMTP por padrao), tambem via variavel de
+ambiente. O e-mail sempre vai para EMAIL_DESTINO (PortoEx), so o
+remetente e o Gmail.
 
 Uso:
   set PORTAL_USER=seu.usuario
   set PORTAL_PASS=sua.senha
-  set EMAIL_USER=seu.email@portoex.com.br
-  set EMAIL_PASS=sua.senha.de.email
+  set EMAIL_USER=seu.email@gmail.com
+  set EMAIL_PASS=sua.senha.de.app.do.gmail
   python pipeline_atualizar.py
 """
 
@@ -39,7 +41,7 @@ REPO_DIR = Path(__file__).parent
 ONEDRIVE_ANALISE_ANSELL = Path(
     r"C:\Users\Mauro Cesar Marques\OneDrive - PORTOEXPRESS LOGISTICA LTDA\Analise Ansell"
 )
-SMTP_HOST = "smtp.office365.com"
+SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_DESTINO = "mauro.cesar@portoex.com.br"
 
