@@ -100,7 +100,10 @@ def build_rows(df):
             'TX. OUTROS': float(r['TX. OUTROS']) if not pd.isna(r['TX. OUTROS']) else 0.0,
             'TX. NOTA': float(r['TX. NOTA']) if not pd.isna(r['TX. NOTA']) else 0.0,
             'TIPO EMISSÃO': tipo,
-            'COTACAO': r['COTACAO'] if not pd.isna(r['COTACAO']) else '',
+            # COTACAO no export bruto e um numero de cotacao (quando negociado
+            # fora da tabela) ou vazio — o filtro Sim/Nao do dashboard espera
+            # 'S'/'N', entao convertemos presenca/ausencia de valor.
+            'COTACAO': 'S' if not pd.isna(r['COTACAO']) else 'N',
             'DATA EMISSAO': iso(data_emissao),
             'DATA ENTREGA': iso(data_entrega),
             'PREV. ENTREGA': iso(prev_entrega),
