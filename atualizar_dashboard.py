@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """
-atualizar_dashboard.py — Atualiza index.html e mobile.html do Indicador Ansell
-a partir de uma planilha consolidada (Ansell + Hercules) exportada do relatorio
-106 (Emissoes) do sistema Brudam.
+atualizar_dashboard.py — Atualiza index.html do Indicador Ansell a partir de
+uma planilha consolidada (Ansell + Hercules) exportada do relatorio 106
+(Emissoes) do sistema Brudam.
 
 Uso: python atualizar_dashboard.py <planilha.xlsx> [pasta_do_dashboard]
 Padrao pasta_do_dashboard: diretorio deste script.
 """
 
 import sys
-import re
 import json
-import unicodedata
 from datetime import datetime
 from pathlib import Path
-from collections import defaultdict
 
 import pandas as pd
 
@@ -135,36 +132,6 @@ def build_raw(rows, gerado_em=None):
     }
 
 
-def build_mobile_d(rows, meta):
-    clientes = meta['clientes']
-    tipos = meta['tipos_emissao']
-    regioes = sorted(set(UF_REGIAO.values()))
-
-    agg = defaultdict(lambda: [0, 0.0, 0.0, 0])  # vol, frete, nf, count
-    for r in rows:
-        ci = clientes.index(r['CLIENTE'])
-        ri = regioes.index(r['REGIAO']) if r['REGIAO'] else -1
-        ti = tipos.index(r['TIPO EMISSÃO'])
-        key = (r['MES'], r['STATUS'], ci, ri, ti)
-        a = agg[key]
-        a[0] += r['VOLUMES']
-        a[1] += r['FRETE TOTAL']
-        a[2] += r['NF VALOR']
-        a[3] += 1
-
-    agg_rows = [[mes, status, ci, ri, ti, vol, round(frt, 2), round(nf, 2), cnt]
-                for (mes, status, ci, ri, ti), (vol, frt, nf, cnt) in agg.items()]
-
-    return {
-        'meses': meta['meses'],
-        'clientes': clientes,
-        'tipos': tipos,
-        'regioes': regioes,
-        'agg': agg_rows,
-        'gerado_em': meta.get('gerado_em'),
-    }
-
-
 def replace_json_blob(content, marker, new_json):
     pos = content.find(marker)
     if pos == -1:
@@ -183,7 +150,6 @@ def main():
     xlsx_path = Path(sys.argv[1])
     dash_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).parent
     index_path = dash_dir / 'index.html'
-    mobile_path = dash_dir / 'mobile.html'
 
     if not xlsx_path.exists():
         print(f'Planilha nao encontrada: {xlsx_path}')
@@ -195,24 +161,16 @@ def main():
 
     rows = build_rows(df)
     raw = build_raw(rows)
-    d_mobile = build_mobile_d(rows, raw['meta'])
 
     print(f"Periodo: {raw['meta']['meses'][0]} a {raw['meta']['meses'][-1]}")
     print(f"Clientes: {raw['meta']['clientes']}")
-    print(f"Linhas RAW: {len(rows)} | Linhas agregadas (mobile): {len(d_mobile['agg'])}")
+    print(f"Linhas RAW: {len(rows)}")
 
     index_content = index_path.read_text(encoding='utf-8')
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = replace_json_blob(index_content, 'const RAW = ', raw_json)
     index_path.write_text(index_content, encoding='utf-8')
     print(f'Atualizado: {index_path}')
-
-    mobile_content = mobile_path.read_text(encoding='utf-8')
-    d_json = json.dumps(d_mobile, ensure_ascii=False, separators=(',', ':'))
-    marker = 'var D=' if 'var D=' in mobile_content else 'var D = '
-    mobile_content = replace_json_blob(mobile_content, marker, d_json)
-    mobile_path.write_text(mobile_content, encoding='utf-8')
-    print(f'Atualizado: {mobile_path}')
 
 
 if __name__ == '__main__':

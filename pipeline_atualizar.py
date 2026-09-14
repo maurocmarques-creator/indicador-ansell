@@ -5,7 +5,7 @@ pipeline_atualizar.py — Pipeline completo do Indicador Ansell:
   1. Extrai do portal Brudam os relatorios de Ansell e Hercules (Playwright)
   2. Consolida os dois em uma planilha unica (salva tambem na pasta
      "Analise Ansell" do OneDrive, como no processo manual)
-  3. Atualiza index.html e mobile.html com os dados novos
+  3. Atualiza index.html com os dados novos
   4. Faz commit + push (so se algo realmente mudou)
 
 Credenciais do portal vem de PORTAL_USER / PORTAL_PASS (variaveis de
@@ -78,43 +78,35 @@ def consolidar(arquivos: dict, destino: Path) -> Path:
 
 
 def atualizar_html(xlsx_consolidado: Path):
-    log("\nAtualizando index.html e mobile.html...")
+    log("\nAtualizando index.html...")
     df = pd.read_excel(xlsx_consolidado, sheet_name="Brudam")
     rows = ad.build_rows(df)
     raw = ad.build_raw(rows)
-    d_mobile = ad.build_mobile_d(rows, raw["meta"])
     log(f"Periodo: {raw['meta']['meses'][0]} a {raw['meta']['meses'][-1]} | {len(rows)} linhas")
 
     import json
 
     index_path = REPO_DIR / "index.html"
-    mobile_path = REPO_DIR / "mobile.html"
 
     index_content = index_path.read_text(encoding="utf-8")
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = ad.replace_json_blob(index_content, "const RAW = ", raw_json)
     index_path.write_text(index_content, encoding="utf-8")
 
-    mobile_content = mobile_path.read_text(encoding="utf-8")
-    d_json = json.dumps(d_mobile, ensure_ascii=False, separators=(",", ":"))
-    marker = "var D=" if "var D=" in mobile_content else "var D = "
-    mobile_content = ad.replace_json_blob(mobile_content, marker, d_json)
-    mobile_path.write_text(mobile_content, encoding="utf-8")
-
-    log("index.html e mobile.html atualizados.")
+    log("index.html atualizado.")
 
 
 def commit_e_push():
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
-        ["git", "status", "--porcelain", "index.html", "mobile.html"],
+        ["git", "status", "--porcelain", "index.html"],
         cwd=REPO_DIR, capture_output=True, text=True, check=True,
     )
     if not status.stdout.strip():
         log("Nenhuma alteracao nos dados — nada para commitar.")
         return False
 
-    subprocess.run(["git", "add", "index.html", "mobile.html"], cwd=REPO_DIR, check=True)
+    subprocess.run(["git", "add", "index.html"], cwd=REPO_DIR, check=True)
     mensagem = f"Atualizacao automatica dos dados ({date.today().isoformat()})"
     subprocess.run(["git", "commit", "-m", mensagem], cwd=REPO_DIR, check=True)
     subprocess.run(["git", "push"], cwd=REPO_DIR, check=True)
