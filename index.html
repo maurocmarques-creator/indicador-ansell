@@ -1110,7 +1110,7 @@ function renderExpectativa() {
         {label:'Realizado',data:volRealData,backgroundColor:'rgba(22,163,74,0.75)',borderRadius:5},
       ]
     },
-    options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:{anchor:'end',align:'top',color:'#1e293b',font:{weight:'700',size:10},formatter:v=>v>0?v.toLocaleString('pt-BR'):'',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>v.toLocaleString('pt-BR')}}}}
+    options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:'bottom'},datalabels:{anchor:'end',align:'top',color:'#1e293b',font:{weight:'700',size:10},formatter:v=>v>0?v.toLocaleString('pt-BR'):'',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>v.toLocaleString('pt-BR')}}}}
   });
 
   destroyChart('exp-fat');
@@ -1123,7 +1123,7 @@ function renderExpectativa() {
         {label:'Realizado (R$ mil)',data:fatRealData,backgroundColor:'rgba(234,88,12,0.75)',borderRadius:5},
       ]
     },
-    options:{responsive:true,plugins:{legend:{position:'bottom'},datalabels:{anchor:'end',align:'top',color:'#1e293b',font:{weight:'700',size:10},formatter:v=>v>0?'R$'+v.toLocaleString('pt-BR')+'K':'',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>'R$'+v+'K'}}}}
+    options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:'bottom'},datalabels:{anchor:'end',align:'top',color:'#1e293b',font:{weight:'700',size:10},formatter:v=>v>0?'R$'+v.toLocaleString('pt-BR')+'K':'',display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},scales:{x:{grid:{display:false}},y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>'R$'+v+'K'}}}}
   });
 }
 
