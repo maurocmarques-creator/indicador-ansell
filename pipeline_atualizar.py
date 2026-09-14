@@ -95,7 +95,10 @@ def _sem_timestamp(raw):
     return {"meta": meta, "rows": raw.get("rows")}
 
 
-def atualizar_html(xlsx_consolidado: Path):
+def atualizar_html(xlsx_consolidado: Path) -> bool:
+    """Atualiza o index.html. O timestamp 'gerado_em' e sempre renovado
+    (para refletir a ultima vez que a rotina rodou), mas o retorno indica
+    se os dados de frete em si (fora do timestamp) realmente mudaram."""
     log("\nAtualizando index.html...")
     df = pd.read_excel(xlsx_consolidado, sheet_name="Brudam")
     rows = ad.build_rows(df)
@@ -107,37 +110,34 @@ def atualizar_html(xlsx_consolidado: Path):
     index_path = REPO_DIR / "index.html"
     index_content = index_path.read_text(encoding="utf-8")
 
-    # Se os dados forem identicos aos ja publicados (fora do timestamp),
-    # mantem o "gerado_em" antigo para nao gerar um commit so por causa
-    # da hora em que o script rodou.
     raw_antigo = ad.read_json_blob(index_content, "const RAW = ")
-    if raw_antigo and _sem_timestamp(raw_antigo) == _sem_timestamp(raw):
-        raw["meta"]["gerado_em"] = raw_antigo["meta"].get("gerado_em")
-        log("Dados iguais aos ja publicados — mantendo timestamp anterior.")
+    dados_mudaram = not (raw_antigo and _sem_timestamp(raw_antigo) == _sem_timestamp(raw))
+    log("Dados de frete mudaram." if dados_mudaram else "Dados de frete iguais aos ja publicados.")
 
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = ad.replace_json_blob(index_content, "const RAW = ", raw_json)
     index_path.write_text(index_content, encoding="utf-8")
 
     log("index.html atualizado.")
+    return dados_mudaram
 
 
-def commit_e_push():
+def commit_e_push(dados_mudaram: bool):
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
         ["git", "status", "--porcelain", "index.html"],
         cwd=REPO_DIR, capture_output=True, text=True, check=True,
     )
     if not status.stdout.strip():
-        log("Nenhuma alteracao nos dados — nada para commitar.")
-        return False
+        log("Nada para commitar (index.html identico ao publicado).")
+        return
 
     subprocess.run(["git", "add", "index.html"], cwd=REPO_DIR, check=True)
-    mensagem = f"Atualizacao automatica dos dados ({date.today().isoformat()})"
+    sufixo = "com dados novos" if dados_mudaram else "sem dados novos, so verificacao"
+    mensagem = f"Atualizacao automatica ({sufixo}) — {date.today().isoformat()}"
     subprocess.run(["git", "commit", "-m", mensagem], cwd=REPO_DIR, check=True)
     subprocess.run(["git", "push"], cwd=REPO_DIR, check=True)
     log("Commit e push feitos com sucesso.")
-    return True
 
 
 def enviar_email(assunto, corpo_html):
@@ -188,12 +188,12 @@ def main():
         destino_consolidado = REPO_DIR / "downloads_tmp" / nome_consolidado
     consolidado_path = consolidar(arquivos, destino_consolidado)
 
-    atualizar_html(consolidado_path)
-    houve_atualizacao = commit_e_push()
+    dados_mudaram = atualizar_html(consolidado_path)
+    commit_e_push(dados_mudaram)
 
     link = "https://maurocmarques-creator.github.io/indicador-ansell/"
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-    situacao = "<b><u>COM ALTERAÇÃO DE DADOS</u></b>" if houve_atualizacao else "<b><u>SEM ALTERAÇÃO DE DADOS</u></b>"
+    situacao = "<b><u>COM ALTERAÇÃO DE DADOS</u></b>" if dados_mudaram else "<b><u>SEM ALTERAÇÃO DE DADOS</u></b>"
     corpo_html = (
         f"<p>A rotina rodou normalmente em {agora}, {situacao}.</p>"
         f"<p>Acesse: <a href='{link}'>{link}</a></p>"
