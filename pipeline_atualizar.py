@@ -29,6 +29,7 @@ import subprocess
 import sys
 from datetime import date, datetime, timedelta
 from email.message import EmailMessage
+from email.utils import formataddr
 from pathlib import Path
 
 import pandas as pd
@@ -148,7 +149,7 @@ def enviar_email(assunto, corpo_html):
 
     msg = EmailMessage()
     msg["Subject"] = assunto
-    msg["From"] = remetente
+    msg["From"] = formataddr(("Portoex x Ansell", remetente))
     msg["To"] = EMAIL_DESTINO
     msg.set_content(corpo_html, subtype="html")
 
