@@ -7,7 +7,7 @@ Repete, via navegador headless, exatamente o fluxo manual:
   login -> Operacional > Relatorios > 106 Emissoes
   -> filtro Cliente + Data Emissao (01/01/<ano atual> ate ontem) -> Pesquisar
   -> Personalizado Excel -> Meus relatorios -> "AUDITORIA TELA 106_ANSELL"
-  -> Gerar -> Excel -> XLSX
+  -> Gerar (isso ja baixa o Excel correto)
 
 Credenciais NUNCA ficam no codigo: vem das variaveis de ambiente
 PORTAL_USER e PORTAL_PASS (defina antes de rodar, ou configure como
@@ -24,7 +24,7 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 PORTAL_URL = "https://azportoex.brudam.com.br/"
 RELATORIO_URL = "https://azportoex.brudam.com.br/opr/relatorio/emissoes"
@@ -103,46 +103,21 @@ def extrair_cliente(page, cliente, data_ini, data_fim, pasta_saida: Path) -> Pat
 
     log(f"Selecionando relatório '{RELATORIO_PERSONALIZADO}'...")
     page.get_by_role("radio", name=RELATORIO_PERSONALIZADO).check()
-    page.get_by_role("button", name="Gerar").click()
-    page.wait_for_timeout(1000)
-
-    log("Clicando em Excel (exportação final)...")
-    # A pagina tem varios botoes chamados "Excel" (barra de ferramentas do
-    # topo + linha de acoes do resultado). O correto e o que fica ao lado
-    # de "Baixar XMLs", entao localizamos pela proximidade estrutural.
-    excel_handle = page.evaluate_handle(
-        """
-        () => {
-            const norm = s => (s || '').replace(/\\s+/g, ' ').trim();
-            const baixarXml = Array.from(document.querySelectorAll('button, a'))
-                .find(el => norm(el.textContent).includes('Baixar XMLs'));
-            if (!baixarXml) return null;
-            // Sobe alguns niveis ate achar um ancestral que contenha o
-            // botao "Excel" (sem ser "Excel Ecommerce"/"Excel Resumo").
-            let node = baixarXml;
-            for (let i = 0; i < 5 && node; i++, node = node.parentElement) {
-                const found = Array.from(node.querySelectorAll('button')).find(b => {
-                    const t = norm(b.textContent);
-                    return t.includes('Excel') && !t.includes('Ecommerce') && !t.includes('Resumo')
-                        && !t.includes('Personalizado') && !t.includes('VTM');
-                });
-                if (found) return found;
-            }
-            return null;
-        }
-        """
-    )
-    excel_el = excel_handle.as_element()
-    if excel_el is None:
-        raise RuntimeError("Botao 'Excel' (linha de resultados) nao encontrado")
-    excel_el.click()
-    page.wait_for_selector("text=Escolha o tipo de exportação", timeout=15000)
 
     pasta_saida.mkdir(parents=True, exist_ok=True)
     destino = pasta_saida / f"{cliente.lower()}.xlsx"
-    log("Aguardando geração do XLSX (pode levar até 1-2 minutos)...")
+
+    log("Clicando em Gerar (isso já gera o Excel correto)...")
     with page.expect_download(timeout=180000) as download_info:
-        page.get_by_role("button", name="XLSX").click()
+        page.get_by_role("button", name="Gerar").click()
+        # Em alguns casos aparece uma caixa extra perguntando CSV/XLSX —
+        # se aparecer, confirma XLSX; se o download ja comecou sozinho,
+        # esse bloco so encerra no timeout curto sem atrapalhar.
+        try:
+            page.wait_for_selector("text=Escolha o tipo de exportação", timeout=5000)
+            page.get_by_role("button", name="XLSX").click()
+        except PlaywrightTimeoutError:
+            pass
     download = download_info.value
     download.save_as(destino)
     log(f"Salvo: {destino}")
