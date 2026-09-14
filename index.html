@@ -285,6 +285,11 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="table-card" style="margin-bottom:16px">
     <h3 style="color:#991b1b">⚠ Fora do Prazo — precisam ser tratadas (ordenado por dias vencidos)</h3>
+    <div style="margin-bottom:10px">
+      <input id="search-transito-fora" type="text" placeholder="🔍 Filtrar por minuta, NF, cliente, destinatário, cidade ou descrição..."
+        style="border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:.8rem;width:380px"
+        oninput="renderTransito()">
+    </div>
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Emissão</th><th>Prazo</th><th>Dias Vencidos</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-fora"></tbody>
@@ -1071,9 +1076,15 @@ function renderTransito() {
     </tr>`;
   }
 
-  document.getElementById('tb-transito-fora').innerHTML = fora.length
-    ? fora.map(r=>rowHtml(r,'fora')).join('')
-    : '<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega fora do prazo 🎉</td></tr>';
+  const searchFora = (document.getElementById('search-transito-fora').value||'').toLowerCase().trim();
+  const foraFiltrado = searchFora
+    ? fora.filter(r => [r.MINUTA, r.NF_DOC, r.CLIENTE, r.EFF_LOCAL, r.EFF_CIDADE, r.EFF_UF, r.DESCRICAO_ULTIMO]
+        .some(v => (v||'').toString().toLowerCase().includes(searchFora)))
+    : fora;
+
+  document.getElementById('tb-transito-fora').innerHTML = foraFiltrado.length
+    ? foraFiltrado.map(r=>rowHtml(r,'fora')).join('')
+    : `<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">${searchFora ? 'Nenhum resultado para "'+searchFora+'"' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
   document.getElementById('tb-transito-dentro').innerHTML = dentro.length
     ? dentro.map(r=>rowHtml(r,'dentro')).join('')
     : '<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega em trânsito dentro do prazo</td></tr>';
