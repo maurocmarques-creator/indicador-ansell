@@ -47,8 +47,16 @@ SMTP_PORT = 587
 EMAIL_DESTINO = "mauro.cesar@portoex.com.br"
 
 
+LOG_FILE = REPO_DIR / "pipeline.log"
+
+
 def log(msg):
     print(msg, flush=True)
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')} — {msg}\n")
+    except Exception:
+        pass  # logging nunca deve derrubar o pipeline
 
 
 def extrair_arquivos(usuario, senha, data_ini, data_fim, pasta_tmp: Path) -> dict:
@@ -140,8 +148,12 @@ def commit_e_push(dados_mudaram: bool):
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
         ["git", "status", "--porcelain", "index.html"],
-        cwd=REPO_DIR, capture_output=True, text=True, check=True,
+        cwd=REPO_DIR, capture_output=True, text=True,
     )
+    log(f"git status --porcelain index.html -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
+    if status.returncode != 0:
+        log("git status falhou -- abortando commit desta rodada.")
+        return
     if not status.stdout.strip():
         log("Nada para commitar (index.html identico ao publicado).")
         return
@@ -218,4 +230,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    log(f"\n{'='*60}\nInicio do pipeline: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    try:
+        main()
+    except Exception:
+        import traceback
+        log("ERRO NAO TRATADO:\n" + traceback.format_exc())
+        raise
