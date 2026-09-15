@@ -37,14 +37,13 @@ from playwright.sync_api import sync_playwright
 
 import atualizar_dashboard as ad
 import extrair_portal as ep
+from config import CONFIG
 
 REPO_DIR = Path(__file__).parent
-ONEDRIVE_ANALISE_ANSELL = Path(
-    r"C:\Users\Mauro Cesar Marques\OneDrive - PORTOEXPRESS LOGISTICA LTDA\Analise Ansell"
-)
+ONEDRIVE_ANALISE_ANSELL = Path(CONFIG["onedrive_consolidado"])
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
-EMAIL_DESTINO = "mauro.cesar@portoex.com.br"
+EMAIL_DESTINO = CONFIG["email_destino"]
 
 
 LOG_FILE = REPO_DIR / "pipeline.log"
@@ -207,7 +206,8 @@ def main():
     arquivos = extrair_arquivos(usuario, senha, data_ini, data_fim, pasta_tmp)
 
     mes_abrev = ad.MES_ABREV[hoje.month]
-    nome_consolidado = f"Base_Jan_{mes_abrev}.xlsx"
+    prefixo = CONFIG.get("prefixo_consolidado", "Base")
+    nome_consolidado = f"{prefixo}_Jan_{mes_abrev}.xlsx"
     # No seu PC, guarda o consolidado no OneDrive (como no processo manual).
     # Na nuvem (GitHub Actions) essa pasta nao existe — usa uma pasta local.
     if ONEDRIVE_ANALISE_ANSELL.parent.exists():
@@ -219,7 +219,7 @@ def main():
     dados_mudaram = atualizar_html(consolidado_path)
     commit_e_push(dados_mudaram)
 
-    link = "https://maurocmarques-creator.github.io/indicador-ansell/"
+    link = CONFIG["link_dashboard"]
     agora = datetime.now().strftime("%d/%m/%Y %H:%M")
     situacao = "<b><u>COM ALTERAÇÃO DE DADOS</u></b>" if dados_mudaram else "<b><u>SEM ALTERAÇÃO DE DADOS</u></b>"
     corpo_html = (

@@ -26,10 +26,12 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
+from config import CONFIG
+
 PORTAL_URL = "https://azportoex.brudam.com.br/"
 RELATORIO_URL = "https://azportoex.brudam.com.br/opr/relatorio/emissoes"
-RELATORIO_PERSONALIZADO = "AUDITORIA TELA 106_ANSELL"
-CLIENTES = ["Ansell", "Hercules"]
+RELATORIO_PERSONALIZADO = CONFIG["template_relatorio"]
+CLIENTES = CONFIG["clientes_portal"]
 
 
 def log(msg):
@@ -52,7 +54,13 @@ def login(page, usuario, senha):
 def get_cliente_input(page):
     """O campo de texto do filtro Cliente fica na linha seguinte ao
     combobox 'Cliente', na mesma coluna da tabela — a pagina nao usa
-    id/name estaveis nesses campos."""
+    id/name estaveis nesses campos. Ao voltar pra essa tela entre um
+    cliente e outro, a pagina pode levar um instante a mais pra montar
+    o select — espera ele existir de fato antes de procurar."""
+    page.wait_for_function(
+        "() => Array.from(document.querySelectorAll('select')).some(s => s.value === 'id_cliente')",
+        timeout=20000,
+    )
     handle = page.evaluate_handle(
         """
         () => {

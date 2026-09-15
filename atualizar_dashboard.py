@@ -15,15 +15,16 @@ from pathlib import Path
 
 import pandas as pd
 
+from config import CONFIG
+
 MES_ABREV = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
              7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
 
 # Excecoes manuais de STATUS por MINUTA, para casos onde o sistema
 # classifica errado (ex: TIPO EMISSAO = DEVOLUCAO mas a carga foi
-# entregue normalmente). Fica aqui para persistir a cada atualizacao.
-STATUS_OVERRIDES = {
-    '298063': 'NO PRAZO',  # entrega realizada, sistema marcou como devolucao
-}
+# entregue normalmente). Fica em cliente_config.json para persistir a
+# cada atualizacao.
+STATUS_OVERRIDES = CONFIG.get("status_overrides", {})
 
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',

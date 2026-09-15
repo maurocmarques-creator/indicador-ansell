@@ -1,0 +1,12 @@
+{
+  "id": "ansell",
+  "clientes_portal": ["Ansell", "Hercules"],
+  "template_relatorio": "AUDITORIA TELA 106_ANSELL",
+  "prefixo_consolidado": "Base",
+  "onedrive_consolidado": "C:\\Users\\Mauro Cesar Marques\\OneDrive - PORTOEXPRESS LOGISTICA LTDA\\Analise Ansell",
+  "email_destino": "mauro.cesar@portoex.com.br",
+  "link_dashboard": "https://maurocmarques-creator.github.io/indicador-ansell/",
+  "status_overrides": {
+    "298063": "NO PRAZO"
+  }
+}
