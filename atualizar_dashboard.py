@@ -18,6 +18,13 @@ import pandas as pd
 MES_ABREV = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
              7: 'Jul', 8: 'Ago', 9: 'Set', 10: 'Out', 11: 'Nov', 12: 'Dez'}
 
+# Excecoes manuais de STATUS por MINUTA, para casos onde o sistema
+# classifica errado (ex: TIPO EMISSAO = DEVOLUCAO mas a carga foi
+# entregue normalmente). Fica aqui para persistir a cada atualizacao.
+STATUS_OVERRIDES = {
+    '298063': 'NO PRAZO',  # entrega realizada, sistema marcou como devolucao
+}
+
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
     'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste',
@@ -95,13 +102,17 @@ def build_rows(df, hoje=None):
         eff_uf = r['UF ENTREGA'] if not pd.isna(r['UF ENTREGA']) else ''
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
+        minuta = str(r['MINUTA'])
+        status = STATUS_OVERRIDES.get(
+            minuta, compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo)
+        )
 
         rows.append({
             'MES': data_emissao.strftime('%Y-%m'),
             'MES_NOME': f"{MES_ABREV[data_emissao.month]}/{data_emissao.year}",
-            'STATUS': compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo),
+            'STATUS': status,
             'CLIENTE': r['CLIENTE'],
-            'MINUTA': str(r['MINUTA']),
+            'MINUTA': minuta,
             'NF_DOC': str(r['NF/DOC']),
             'VOLUMES': int(r['VOLUMES']) if not pd.isna(r['VOLUMES']) else 0,
             'FRETE TOTAL': float(r['FRETE TOTAL']) if not pd.isna(r['FRETE TOTAL']) else 0.0,
