@@ -26,6 +26,11 @@ MES_ABREV = {1: 'Jan', 2: 'Fev', 3: 'Mar', 4: 'Abr', 5: 'Mai', 6: 'Jun',
 # cada atualizacao.
 STATUS_OVERRIDES = CONFIG.get("status_overrides", {})
 
+# Correcoes manuais de datas por MINUTA, para erros de digitacao no
+# portal (ex: agendamento cadastrado com o ano errado). Fica em
+# cliente_config.json para persistir a cada atualizacao.
+DATE_OVERRIDES = CONFIG.get("date_overrides", {})
+
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
     'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste',
@@ -108,15 +113,24 @@ def build_rows(df, hoje=None):
     tipo_col = find_tipo_emissao_col(df)
     rows = []
     for _, r in df.iterrows():
+        minuta = str(r['MINUTA'])
         data_emissao = r['DATA EMISSAO']
         data_entrega = r['DATA ENTREGA']
         prev_entrega = r['PREV. ENTREGA']
         data_agendamento = r['DATA DE AGENDAMENTO']
+
+        # Corrige erros de digitacao de data cadastrados no portal (ex:
+        # ano errado), antes de qualquer calculo usar essas datas.
+        date_over = DATE_OVERRIDES.get(minuta, {})
+        if 'DATA DE AGENDAMENTO' in date_over:
+            data_agendamento = pd.Timestamp(date_over['DATA DE AGENDAMENTO'])
+        if 'PREV. ENTREGA' in date_over:
+            prev_entrega = pd.Timestamp(date_over['PREV. ENTREGA'])
+
         tipo = r[tipo_col]
         eff_uf = r['UF ENTREGA'] if not pd.isna(r['UF ENTREGA']) else ''
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
-        minuta = str(r['MINUTA'])
         status = STATUS_OVERRIDES.get(
             minuta, compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo)
         )
