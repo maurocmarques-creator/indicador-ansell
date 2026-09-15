@@ -846,7 +846,10 @@ function renderTotaisCx() {
 // performance de quem ja foi entregue.
 function renderPerformance() {
   const rows = filteredRowsPerf.filter(r=>r.STATUS==='NO PRAZO'||r.STATUS==='EM ATRASO');
-  const meses = getMesesPerf();
+  // Meses vem so das entregas ja baixadas (rows), nao de getMesesPerf()
+  // (que inclui Em Transito/Devolucao/Reentrega) — senao um mes com so
+  // envios ainda em transito aparece com um "Total" falso e 0% em tudo.
+  const meses = [...new Set(rows.map(r=>r.MES_PREV))].sort();
   const labels = meses.map(m=>MES_NOMES[m]||m);
 
   const totOk = rows.filter(r=>r.STATUS==='NO PRAZO').length;
@@ -1031,7 +1034,8 @@ function buildDiversosDetail() {
 // foi entregue.
 function renderBarraPerf() {
   const rows = filteredRowsPerf.filter(r=>r.STATUS==='NO PRAZO'||r.STATUS==='EM ATRASO');
-  const meses = getMesesPerf();
+  // Idem renderPerformance(): meses so das entregas ja baixadas.
+  const meses = [...new Set(rows.map(r=>r.MES_PREV))].sort();
   const labels = meses.map(m=>MES_NOMES[m]||m);
 
   // Vol por status por mes (usando volumes não contagem)
