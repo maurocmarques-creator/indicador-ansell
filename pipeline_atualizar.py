@@ -122,7 +122,21 @@ def atualizar_html(xlsx_consolidado: Path) -> bool:
     return dados_mudaram
 
 
+def limpar_desktop_ini_do_git():
+    """O Google Drive (esta pasta e sincronizada) recria arquivos
+    desktop.ini dentro de .git/refs/, corrompendo as referencias do
+    Git e travando push/fetch silenciosamente. Remove antes de mexer
+    no git."""
+    git_dir = REPO_DIR / ".git"
+    removidos = list(git_dir.rglob("desktop.ini"))
+    for p in removidos:
+        p.unlink(missing_ok=True)
+    if removidos:
+        log(f"Removidos {len(removidos)} desktop.ini de dentro do .git (Google Drive).")
+
+
 def commit_e_push(dados_mudaram: bool):
+    limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
         ["git", "status", "--porcelain", "index.html"],
