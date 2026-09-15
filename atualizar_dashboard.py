@@ -90,6 +90,19 @@ def find_tipo_emissao_col(df):
     return candidates[0]
 
 
+def prazo_efetivo(prev_entrega, data_agendamento, data_emissao):
+    """Data que rege as metricas de PERFORMANCE (por oposicao as de
+    faturamento, que usam DATA EMISSAO): se tiver agendamento, usa o
+    agendamento; senao usa a previsao de entrega; se nenhum dos dois
+    existir (raro), cai de volta pra emissao para a linha nao sumir dos
+    filtros de mes."""
+    if not pd.isna(data_agendamento):
+        return data_agendamento
+    if not pd.isna(prev_entrega):
+        return prev_entrega
+    return data_emissao
+
+
 def build_rows(df, hoje=None):
     hoje = pd.Timestamp(hoje) if hoje is not None else pd.Timestamp.now().normalize()
     tipo_col = find_tipo_emissao_col(df)
@@ -107,10 +120,13 @@ def build_rows(df, hoje=None):
         status = STATUS_OVERRIDES.get(
             minuta, compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo)
         )
+        prazo_perf = prazo_efetivo(prev_entrega, data_agendamento, data_emissao)
 
         rows.append({
             'MES': data_emissao.strftime('%Y-%m'),
             'MES_NOME': f"{MES_ABREV[data_emissao.month]}/{data_emissao.year}",
+            'MES_PREV': prazo_perf.strftime('%Y-%m'),
+            'MES_PREV_NOME': f"{MES_ABREV[prazo_perf.month]}/{prazo_perf.year}",
             'STATUS': status,
             'CLIENTE': r['CLIENTE'],
             'MINUTA': minuta,
