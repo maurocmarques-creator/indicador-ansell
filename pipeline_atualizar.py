@@ -48,6 +48,8 @@ EMAIL_DESTINO = "mauro.cesar@portoex.com.br"
 
 
 LOG_FILE = REPO_DIR / "pipeline.log"
+LOCK_FILE = REPO_DIR / "pipeline.lock"
+LOCK_MAX_IDADE_MIN = 30  # acima disso, considera trava travada de uma execucao anterior que morreu
 
 
 def log(msg):
@@ -229,11 +231,34 @@ def main():
     log("\nPipeline concluido.")
 
 
+def adquirir_lock():
+    """Evita duas execucoes reais simultaneas (ex.: Task Scheduler disparando
+    de novo com uma anterior ainda rodando) fazendo login duplicado no portal.
+    Trava obsoleta (processo anterior que travou/morreu) e destravada sozinha
+    apos LOCK_MAX_IDADE_MIN."""
+    if LOCK_FILE.exists():
+        idade_min = (datetime.now().timestamp() - LOCK_FILE.stat().st_mtime) / 60
+        if idade_min < LOCK_MAX_IDADE_MIN:
+            log(f"Ja existe uma execucao em andamento (trava com {idade_min:.1f} min) — abortando esta chamada.")
+            return False
+        log(f"Trava antiga encontrada ({idade_min:.1f} min) — considerando travada, removendo e seguindo.")
+    LOCK_FILE.write_text(datetime.now().isoformat(), encoding="utf-8")
+    return True
+
+
+def liberar_lock():
+    LOCK_FILE.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
     log(f"\n{'='*60}\nInicio do pipeline: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+    if not adquirir_lock():
+        sys.exit(0)
     try:
         main()
     except Exception:
         import traceback
         log("ERRO NAO TRATADO:\n" + traceback.format_exc())
         raise
+    finally:
+        liberar_lock()
