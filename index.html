@@ -36,6 +36,8 @@ header{background:var(--primary);color:#fff;padding:0 24px;display:flex;align-it
 .kpi.orange{border-left-color:var(--orange)}
 .kpi.red{border-left-color:var(--accent)}
 .kpi label{font-size:.72rem;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.tag-filtro{font-size:.68rem;font-weight:500;text-transform:none;letter-spacing:0;color:#94a3b8}
+h3 .tag-filtro{font-size:.7rem;margin-left:2px}
 .kpi .value{font-size:1.6rem;font-weight:800;color:var(--primary);margin:4px 0}
 .kpi .sub{font-size:.72rem;color:var(--gray)}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
@@ -159,39 +161,39 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: TOTAIS -->
 <div id="tab-totais" class="content active">
   <div class="kpi-row">
-    <div class="kpi"><label>Total Volumes</label><div class="value" id="kpi-vol">-</div><div class="sub">caixas transportadas</div></div>
-    <div class="kpi"><label>Frete Total</label><div class="value" id="kpi-frete" style="font-size:1.15rem">-</div><div class="sub">R$ acumulado</div></div>
-    <div class="kpi"><label>Valor Mercadoria</label><div class="value" id="kpi-nf" style="font-size:1.15rem">-</div><div class="sub">R$ NF total</div></div>
-    <div class="kpi"><label>% Frete / NF</label><div class="value" id="kpi-pct">-</div><div class="sub">custo relativo</div></div>
+    <div class="kpi"><label>Total Volumes <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-vol">-</div><div class="sub">caixas transportadas</div></div>
+    <div class="kpi"><label>Frete Total <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-frete" style="font-size:1.15rem">-</div><div class="sub">R$ acumulado</div></div>
+    <div class="kpi"><label>Valor Mercadoria <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-nf" style="font-size:1.15rem">-</div><div class="sub">R$ NF total</div></div>
+    <div class="kpi"><label>% Frete / NF <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-pct">-</div><div class="sub">custo relativo</div></div>
   </div>
   <div class="charts-grid triple">
     <div class="chart-card">
-      <h3>Volumes por Mês</h3>
+      <h3>Volumes por Mês <span class="tag-filtro">(Emissão)</span></h3>
       <canvas id="ch-vol-mes"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Performance Geral</h3>
+      <h3>Performance Geral <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-perf-pizza"></canvas>
     </div>
   </div>
   <div class="charts-grid">
     <div class="chart-card">
-      <h3>% Frete / Valor NF por Mês</h3>
+      <h3>% Frete / Valor NF por Mês <span class="tag-filtro">(Emissão)</span></h3>
       <canvas id="ch-pct-mes"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Volumes por UF Destino (Top 10)</h3>
+      <h3>Volumes por UF Destino (Top 10) <span class="tag-filtro">(Emissão)</span></h3>
       <canvas id="ch-uf-vol"></canvas>
     </div>
   </div>
   <div class="charts-grid triple">
     <div class="chart-card">
-      <h3>Performance por Região</h3>
+      <h3>Performance por Região <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-reg-perf" style="max-height:240px"></canvas>
       <div id="reg-perf-table" style="margin-top:10px;font-size:0.76rem;overflow-x:auto"></div>
     </div>
     <div class="chart-card">
-      <h3>Volumes por Região</h3>
+      <h3>Volumes por Região <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-reg-vol"></canvas>
     </div>
   </div>
@@ -200,17 +202,17 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: TOTAIS POR CX -->
 <div id="tab-totais-cx" class="content">
   <div class="kpi-row">
-    <div class="kpi"><label>Frete Médio / Volume</label><div class="value" id="kpi-cx-frete">-</div><div class="sub">R$ por caixa</div></div>
-    <div class="kpi"><label>Pedágio / Volume</label><div class="value" id="kpi-cx-ped">-</div><div class="sub">R$ por caixa</div></div>
-    <div class="kpi"><label>ICMS / Volume</label><div class="value" id="kpi-cx-icms">-</div><div class="sub">R$ por caixa</div></div>
+    <div class="kpi"><label>Frete Médio / Volume <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-cx-frete">-</div><div class="sub">R$ por caixa</div></div>
+    <div class="kpi"><label>Pedágio / Volume <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-cx-ped">-</div><div class="sub">R$ por caixa</div></div>
+    <div class="kpi"><label>ICMS / Volume <span class="tag-filtro">(Emissão)</span></label><div class="value" id="kpi-cx-icms">-</div><div class="sub">R$ por caixa</div></div>
   </div>
   <div class="charts-grid">
     <div class="chart-card">
-      <h3>Composição do Frete por Caixa (por Mês)</h3>
+      <h3>Composição do Frete por Caixa (por Mês) <span class="tag-filtro">(Emissão)</span></h3>
       <canvas id="ch-comp-mes"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Volumes por Mês</h3>
+      <h3>Volumes por Mês <span class="tag-filtro">(Emissão)</span></h3>
       <canvas id="ch-vol-mes2"></canvas>
     </div>
   </div>
@@ -219,18 +221,18 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: PERFORMANCE -->
 <div id="tab-performance" class="content">
   <div class="kpi-row">
-    <div class="kpi green"><label>No Prazo</label><div class="value" id="kpi-p-ok">-</div><div class="sub" id="kpi-p-ok-pct">-</div></div>
-    <div class="kpi orange"><label>Em Atraso</label><div class="value" id="kpi-p-late">-</div><div class="sub" id="kpi-p-late-pct">-</div></div>
-    <div class="kpi"><label>Total Entregues</label><div class="value" id="kpi-p-total">-</div><div class="sub">com baixa efetiva</div></div>
-    <div class="kpi green"><label>Eficiência</label><div class="value" id="kpi-efic">-</div><div class="sub">Meta: 95%</div></div>
+    <div class="kpi green"><label>No Prazo <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-p-ok">-</div><div class="sub" id="kpi-p-ok-pct">-</div></div>
+    <div class="kpi orange"><label>Em Atraso <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-p-late">-</div><div class="sub" id="kpi-p-late-pct">-</div></div>
+    <div class="kpi"><label>Total Entregues <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-p-total">-</div><div class="sub">com baixa efetiva</div></div>
+    <div class="kpi green"><label>Eficiência <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-efic">-</div><div class="sub">Meta: 95%</div></div>
   </div>
   <p style="font-size:.78rem;color:#64748b;margin:-8px 0 16px">Considera apenas entregas com data de entrega preenchida. Entregas ainda em aberto ficam na aba <b>🚚 Em Trânsito</b>.</p>
   <div class="chart-card" style="margin-bottom:16px">
-    <h3>Performance por Mês — Contagem por Status</h3>
+    <h3>Performance por Mês — Contagem por Status <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <canvas id="ch-perf-mes" style="max-height:260px"></canvas>
   </div>
   <div class="table-card">
-    <h3>Performance por Mês e Status</h3>
+    <h3>Performance por Mês e Status <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <table>
       <thead><tr><th>Mês</th><th>Total</th><th>No Prazo</th><th>%</th><th>Em Atraso</th><th>%</th><th>Eficiência</th></tr></thead>
       <tbody id="tb-perf-mes"></tbody>
@@ -241,7 +243,7 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: PERFORMANCE DESTINATÁRIO -->
 <div id="tab-perf-dest" class="content">
   <div class="table-card">
-    <h3>Performance por Destinatário</h3>
+    <h3>Performance por Destinatário <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <div style="margin-bottom:10px">
       <input id="search-dest" type="text" placeholder="🔍 Filtrar destinatário..." 
         style="border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:.8rem;width:280px" 
@@ -258,13 +260,13 @@ tr:last-child td{border-bottom:none}
 <div id="tab-barra-perf" class="content">
   <div class="charts-grid single">
     <div class="chart-card">
-      <h3>Volumes por Status por Mês</h3>
+      <h3>Volumes por Status por Mês <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-barra-status"></canvas>
     </div>
   </div>
   <div class="charts-grid single">
     <div class="chart-card">
-      <h3>% Eficiência vs Meta (95%)</h3>
+      <h3>% Eficiência vs Meta (95%) <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-efic-meta"></canvas>
     </div>
   </div>
@@ -277,18 +279,18 @@ tr:last-child td{border-bottom:none}
     <button onclick="exportarTransitoExcel()" style="white-space:nowrap;border:1px solid var(--border);border-radius:6px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#166534;background:#f0fdf4;cursor:pointer">⬇ Exportar Excel</button>
   </div>
   <div class="kpi-row">
-    <div class="kpi"><label>Total Em Trânsito</label><div class="value" id="kpi-t-total">-</div><div class="sub">sem baixa</div></div>
-    <div class="kpi green"><label>Dentro do Prazo</label><div class="value" id="kpi-t-ok">-</div><div class="sub" id="kpi-t-ok-pct">-</div></div>
-    <div class="kpi orange"><label>Fora do Prazo</label><div class="value" id="kpi-t-late">-</div><div class="sub" id="kpi-t-late-pct">-</div></div>
+    <div class="kpi"><label>Total Em Trânsito <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-t-total">-</div><div class="sub">sem baixa</div></div>
+    <div class="kpi green"><label>Dentro do Prazo <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-t-ok">-</div><div class="sub" id="kpi-t-ok-pct">-</div></div>
+    <div class="kpi orange"><label>Fora do Prazo <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-t-late">-</div><div class="sub" id="kpi-t-late-pct">-</div></div>
   </div>
   <div class="charts-grid single">
     <div class="chart-card">
-      <h3>Em Trânsito — Dentro vs Fora do Prazo</h3>
+      <h3>Em Trânsito — Dentro vs Fora do Prazo <span class="tag-filtro">(Prev. Entrega)</span></h3>
       <canvas id="ch-transito-pizza" style="max-height:240px"></canvas>
     </div>
   </div>
   <div class="table-card" style="margin-bottom:16px">
-    <h3 style="color:#991b1b">⚠ Fora do Prazo — precisam ser tratadas (ordenado por dias vencidos)</h3>
+    <h3 style="color:#991b1b">⚠ Fora do Prazo — precisam ser tratadas (ordenado por dias vencidos) <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <div style="display:flex;flex-direction:column;gap:3px">
         <label style="font-size:.75rem;color:var(--gray);font-weight:600">Cliente</label>
@@ -313,7 +315,7 @@ tr:last-child td{border-bottom:none}
     </table>
   </div>
   <div class="table-card">
-    <h3>Dentro do Prazo</h3>
+    <h3>Dentro do Prazo <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Emissão</th><th>Prazo</th><th>Dias Restantes</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-dentro"></tbody>
@@ -335,11 +337,11 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="charts-grid single" style="margin-top:0">
     <div class="chart-card">
-      <h3>Volumes — Previsto vs Realizado</h3>
+      <h3>Volumes — Previsto vs Realizado <span class="tag-filtro">(Realizado: Emissão)</span></h3>
       <canvas id="ch-exp-vol" style="max-height:280px"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Faturamento — Previsto vs Realizado</h3>
+      <h3>Faturamento — Previsto vs Realizado <span class="tag-filtro">(Realizado: Emissão)</span></h3>
       <canvas id="ch-exp-fat" style="max-height:280px"></canvas>
     </div>
   </div>
@@ -348,7 +350,7 @@ tr:last-child td{border-bottom:none}
 <!-- TAB: MAPA -->
 <div id="tab-mapa" class="content">
   <div class="table-card" style="padding:16px 20px 12px">
-    <h3 style="margin-bottom:10px">Dispersão de Entregas por Cidade</h3>
+    <h3 style="margin-bottom:10px">Dispersão de Entregas por Cidade <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <p style="font-size:.8rem;color:#64748b;margin-bottom:12px">
       Tamanho da bolinha proporcional ao volume de carga. Passe o mouse para ver detalhes. Aplica os filtros ativos.
     </p>
