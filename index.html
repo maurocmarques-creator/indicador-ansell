@@ -430,6 +430,7 @@ const COLORS = {
 
 const _MN_MAP = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
 function _fmtMes(m){ const p=m.split('-'); return (_MN_MAP[p[1]]||p[1])+'/'+p[0]; }
+const MURAL_URL = 'https://claude.ai/artifact/6TVtFiPGJiGzh4JCFx4dfM';
 const MES_NOMES = {};
 [...new Set(RAW.rows.flatMap(r=>[r.MES, r.MES_PREV]))].sort().forEach(m=>{ MES_NOMES[m]=_fmtMes(m); });
 
@@ -1126,13 +1127,19 @@ function renderTransito() {
     const diasTxt = r._dias===null ? '—' : (tipo==='fora' ? r._dias+'d' : Math.abs(r._dias)+'d');
     const diasStyle = tipo==='fora' ? 'color:#991b1b;font-weight:700' : 'color:#166534;font-weight:600';
     const msgs = r.OBSERVACOES || [];
+    const temMsg = msgs.length > 0;
     const obsHtml = msgs.map(m => `
       <div style="margin-top:4px;padding:4px 7px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:3px">
         <div style="font-size:.68rem;color:#92400e;font-weight:700">${escHtml(m.autor||'PortoEx')} <span style="font-weight:400;color:#b45309">${escHtml(m.data||'')}</span></div>
         <div style="font-size:.74rem;color:#1e293b">${escHtml(m.texto||'')}</div>
       </div>`).join('');
-    return `<tr>
-      <td>${r.MINUTA}</td>
+    const linkMural = `${MURAL_URL}?minuta=${encodeURIComponent(r.MINUTA)}`;
+    const badgeMsg = temMsg
+      ? ` <a href="${linkMural}" target="_blank" rel="noopener" title="Ver conversa completa no mural"
+            style="display:inline-block;margin-left:4px;padding:1px 7px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;text-decoration:none;vertical-align:middle;white-space:nowrap">💬 ${msgs.length}</a>`
+      : '';
+    return `<tr${temMsg ? ' style="background:#fffdf5"' : ''}>
+      <td>${r.MINUTA}${badgeMsg}</td>
       <td>${r.NF_DOC}</td>
       <td>${r.CLIENTE}</td>
       <td>${r.EFF_LOCAL||'—'}</td>
