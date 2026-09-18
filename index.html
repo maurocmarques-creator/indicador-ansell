@@ -639,6 +639,24 @@ function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
 
+// --- OBSERVACOES (Em Transito) ---
+// Campo editavel salvo no navegador de quem digitou (localStorage nao
+// e compartilhado entre pessoas/dispositivos, mas sobrevive as
+// atualizacoes diarias do dashboard, que reescrevem o arquivo inteiro).
+function getObsLocal(minuta) {
+  try { return localStorage.getItem('obs_transito_'+minuta) || ''; }
+  catch(e) { return ''; }
+}
+function setObsLocal(minuta, valor) {
+  try {
+    if (valor) localStorage.setItem('obs_transito_'+minuta, valor);
+    else localStorage.removeItem('obs_transito_'+minuta);
+  } catch(e) {}
+}
+function salvarObservacaoTransito(el) {
+  setObsLocal(el.dataset.minuta, el.value.trim());
+}
+
 // --- RENDER ALL ---
 function renderAll() {
   renderTotais();
@@ -1121,6 +1139,8 @@ function renderTransito() {
   function rowHtml(r, tipo) {
     const diasTxt = r._dias===null ? '—' : (tipo==='fora' ? r._dias+'d' : Math.abs(r._dias)+'d');
     const diasStyle = tipo==='fora' ? 'color:#991b1b;font-weight:700' : 'color:#166534;font-weight:600';
+    const obsAtual = getObsLocal(r.MINUTA) || r.OBSERVACAO || '';
+    const obsAttr = obsAtual.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     return `<tr>
       <td>${r.MINUTA}</td>
       <td>${r.NF_DOC}</td>
@@ -1130,7 +1150,11 @@ function renderTransito() {
       <td>${fmtBR(r['DATA EMISSAO'])}</td>
       <td>${fmtBR(r._prazo)}</td>
       <td style="${diasStyle}">${diasTxt}</td>
-      <td>${r.DESCRICAO_ULTIMO||'—'}${r.OBSERVACAO ? `<br><span style="color:#b45309;font-style:italic;font-size:.75rem">📌 ${r.OBSERVACAO}</span>` : ''}</td>
+      <td>${r.DESCRICAO_ULTIMO||'—'}<br>
+        <input type="text" class="obs-transito-input" data-minuta="${r.MINUTA}" placeholder="📌 + observação"
+          value="${obsAttr}" onchange="salvarObservacaoTransito(this)"
+          style="margin-top:4px;width:100%;box-sizing:border-box;font-size:.72rem;border:1px solid #fde68a;border-radius:4px;padding:3px 6px;color:#92400e;background:#fffbeb">
+      </td>
     </tr>`;
   }
 
@@ -1204,7 +1228,7 @@ function exportarTransitoExcel() {
       'UF': r.EFF_UF,
       'REGIAO': r.REGIAO,
       'DESCRICAO ULTIMO': r.DESCRICAO_ULTIMO,
-      'OBSERVACAO': r.OBSERVACAO || '',
+      'OBSERVACAO': getObsLocal(r.MINUTA) || r.OBSERVACAO || '',
     };
   }
 
