@@ -31,9 +31,14 @@ STATUS_OVERRIDES = CONFIG.get("status_overrides", {})
 # cliente_config.json para persistir a cada atualizacao.
 DATE_OVERRIDES = CONFIG.get("date_overrides", {})
 
-# Observacoes manuais por MINUTA, mostradas na aba Em Transito logo
-# abaixo da descricao da ultima ocorrencia (ex: "Aguardando pagamento
-# DAE"). Fica em cliente_config.json para persistir a cada atualizacao.
+# Mural de observacoes por MINUTA, mostrado na aba Em Transito logo
+# abaixo da descricao da ultima ocorrencia -- uma "conversa" (lista de
+# mensagens, mais recente por ultimo) que o time PortoEx escreve na
+# ferramenta interna (Artifact com banco compartilhado) e que este
+# pipeline sincroniza para dentro de cliente_config.json, para ficar
+# visivel (somente leitura) para quem abrir o dashboard publico,
+# inclusive o cliente. Formato por minuta:
+#   [{"autor": "Nome", "texto": "...", "data": "17/09/2026 14:30"}, ...]
 OBSERVACOES_TRANSITO = CONFIG.get("observacoes_transito", {})
 
 UF_REGIAO = {
@@ -171,7 +176,7 @@ def build_rows(df, hoje=None):
             'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
             'EFF_CIDADE': r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else '',
             'DESCRICAO_ULTIMO': descricao_ultimo,
-            'OBSERVACAO': OBSERVACOES_TRANSITO.get(minuta, ''),
+            'OBSERVACOES': OBSERVACOES_TRANSITO.get(minuta, []),
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': UF_CENTROID[eff_uf][0] if eff_uf in UF_CENTROID else None,
