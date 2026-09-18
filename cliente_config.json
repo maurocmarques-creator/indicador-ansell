@@ -13,5 +13,13 @@
     "268542": { "DATA DE AGENDAMENTO": "2026-02-03" },
     "275297": { "PREV. ENTREGA": "2026-04-02" }
   },
-  "observacoes_transito": {}
+  "observacoes_transito": {
+    "287695": [
+      {
+        "autor": "PortoEx",
+        "texto": "teste",
+        "data": "17/09/2026 22:34"
+      }
+    ]
+  }
 }
