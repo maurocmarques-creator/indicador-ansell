@@ -104,6 +104,7 @@ tr:last-child td{border-bottom:none}
   <div class="tab" onclick="showTab('transito')">🚚 Em Trânsito</div>
   <div class="tab" onclick="showTab('expectativa')">📊 Expectativa</div>
   <div class="tab" onclick="showTab('mapa')">🗺 Mapa</div>
+  <a class="tab" id="tab-mural" target="_blank" rel="noopener" style="margin-left:auto;text-decoration:none" title="Mural interno PortoEx — observações por minuta (abre em nova aba)">💬 Mural ↗</a>
 </div>
 <div class="filters">
   <div class="filter-group">
@@ -484,6 +485,7 @@ const MESES_TODOS = [...new Set(allRows.flatMap(r=>[r.MES, r.MES_PREV]))].sort()
 
 // --- INIT ---
 function init() {
+  document.getElementById('tab-mural').href = MURAL_URL;
   // Populate filters
   const tipos = RAW.meta.tipos_emissao;
   const ufs = RAW.meta.ufs;
