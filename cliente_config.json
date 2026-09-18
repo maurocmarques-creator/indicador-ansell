@@ -12,5 +12,6 @@
   "date_overrides": {
     "268542": { "DATA DE AGENDAMENTO": "2026-02-03" },
     "275297": { "PREV. ENTREGA": "2026-04-02" }
-  }
+  },
+  "observacoes_transito": {}
 }

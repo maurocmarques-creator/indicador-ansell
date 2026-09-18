@@ -31,6 +31,11 @@ STATUS_OVERRIDES = CONFIG.get("status_overrides", {})
 # cliente_config.json para persistir a cada atualizacao.
 DATE_OVERRIDES = CONFIG.get("date_overrides", {})
 
+# Observacoes manuais por MINUTA, mostradas na aba Em Transito logo
+# abaixo da descricao da ultima ocorrencia (ex: "Aguardando pagamento
+# DAE"). Fica em cliente_config.json para persistir a cada atualizacao.
+OBSERVACOES_TRANSITO = CONFIG.get("observacoes_transito", {})
+
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
     'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste',
@@ -166,6 +171,7 @@ def build_rows(df, hoje=None):
             'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
             'EFF_CIDADE': r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else '',
             'DESCRICAO_ULTIMO': descricao_ultimo,
+            'OBSERVACAO': OBSERVACOES_TRANSITO.get(minuta, ''),
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': UF_CENTROID[eff_uf][0] if eff_uf in UF_CENTROID else None,
