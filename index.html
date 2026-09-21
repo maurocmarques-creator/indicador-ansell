@@ -1089,10 +1089,24 @@ function renderTransito() {
   const hoje = new Date(); hoje.setHours(0,0,0,0);
 
   function prazoEfetivo(r) { return r['DATA DE AGENDAMENTO'] || r['PREV. ENTREGA']; }
+  function diasUteisEntre(inicio, fim) {
+    // Conta dias uteis (seg-sex) estritamente entre 'inicio' (exclusive) e 'fim' (inclusive).
+    let dias = 0;
+    const cursor = new Date(inicio);
+    cursor.setDate(cursor.getDate() + 1);
+    while (cursor <= fim) {
+      const dow = cursor.getDay(); // 0=domingo, 6=sabado
+      if (dow !== 0 && dow !== 6) dias++;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dias;
+  }
   function diasDiff(dataStr) {
     if (!dataStr) return null;
     const d = new Date(dataStr+'T00:00:00');
-    return Math.round((hoje - d) / 86400000); // positivo = dias vencidos, negativo = dias restantes
+    if (d.getTime() === hoje.getTime()) return 0;
+    // positivo = dias uteis vencidos, negativo = dias uteis restantes (fins de semana nao contam)
+    return hoje > d ? diasUteisEntre(d, hoje) : -diasUteisEntre(hoje, d);
   }
   function fmtBR(iso) {
     if (!iso) return '—';
