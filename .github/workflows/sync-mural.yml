@@ -10,6 +10,9 @@ on:
     paths:
       - 'cliente_config.json'
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
