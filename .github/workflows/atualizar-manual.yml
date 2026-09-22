@@ -1,0 +1,16 @@
+name: Atualizar Indicador Ansell (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  atualizar:
+    runs-on: self-hosted
+    # Roda direto na pasta do projeto que ja existe no PC (mesma que o
+    # Agendador de Tarefas usa) -- sem clonar de novo, sem duplicar
+    # pipeline.lock/run_output.log/downloads_tmp.
+    steps:
+      - name: Rodar pipeline
+        working-directory: G:\Meu Drive\Claude\Mauro\indicador-ansell
+        run: python pipeline_atualizar.py
+        shell: cmd
