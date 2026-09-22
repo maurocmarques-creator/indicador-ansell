@@ -104,8 +104,18 @@ tr:last-child td{border-bottom:none}
   <div class="tab" onclick="showTab('transito')">🚚 Em Trânsito</div>
   <div class="tab" onclick="showTab('expectativa')">📊 Expectativa</div>
   <div class="tab" onclick="showTab('mapa')">🗺 Mapa</div>
-  <a class="tab" id="tab-mural" target="_blank" rel="noopener" style="margin-left:auto;text-decoration:none" title="Mural interno PortoEx — observações por minuta (abre em nova aba)">💬 Mural ↗</a>
+  <div style="position:relative;margin-left:auto;display:flex;align-items:center;gap:2px">
+    <button id="btn-atualizar-agora" class="tab" type="button" style="border:0;background:transparent;cursor:pointer;font:inherit" title="Dispara a extração do portal agora, sem esperar o próximo horário programado (06h/12h/18h/23h59)">🔄 Atualizar Agora</button>
+    <button id="btn-gear-atualizar" type="button" title="Configurar token de atualização" style="border:0;background:transparent;color:rgba(255,255,255,.65);cursor:pointer;padding:4px 8px;font-size:.9rem">⚙</button>
+    <div id="painel-token" style="display:none;position:absolute;top:100%;right:0;z-index:50;background:#fff;color:#1e293b;border:1px solid var(--border);border-radius:8px;padding:12px 14px;width:300px;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:6px">
+      <div style="font-size:.78rem;color:#64748b;margin-bottom:8px">Token do GitHub (Actions, só deste repositório) — pede uma vez só por navegador. <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Criar token ↗</a></div>
+      <input id="input-gh-token" type="password" placeholder="github_pat_..." autocomplete="off" style="width:100%;box-sizing:border-box;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.8rem;margin-bottom:8px;color:#1e293b">
+      <button id="btn-salvar-gh-token" style="width:100%;background:var(--primary);color:#fff;border:0;border-radius:6px;padding:7px;font-size:.8rem;font-weight:600;cursor:pointer">Salvar</button>
+    </div>
+  </div>
+  <a class="tab" id="tab-mural" target="_blank" rel="noopener" style="text-decoration:none" title="Mural interno PortoEx — observações por minuta (abre em nova aba)">💬 Mural ↗</a>
 </div>
+<div id="toast-atualizar" style="display:none;position:fixed;bottom:20px;right:20px;background:#1e293b;color:#fff;padding:10px 16px;border-radius:8px;font-size:.85rem;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:320px"></div>
 <div class="filters">
   <div class="filter-group">
     <label>Cliente</label>
@@ -432,6 +442,96 @@ const COLORS = {
 const _MN_MAP = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
 function _fmtMes(m){ const p=m.split('-'); return (_MN_MAP[p[1]]||p[1])+'/'+p[0]; }
 const MURAL_URL = 'https://claude.ai/artifact/6TVtFiPGJiGzh4JCFx4dfM';
+
+// --- ATUALIZAR AGORA (dispara o pipeline fora do horario programado) ---
+// Chama a API do GitHub (workflow_dispatch) pra acordar o executor que
+// roda no PC do Mauro. O token fica so no localStorage de cada
+// navegador -- nunca e escrito neste arquivo (o pipeline reescreve o
+// index.html inteiro a cada rodada, entao nada gravado aqui sobreviveria).
+const GH_OWNER = 'maurocmarques-creator';
+const GH_REPO = 'indicador-ansell';
+const GH_WORKFLOW = 'atualizar-manual.yml';
+const GH_TOKEN_KEY = 'indicador_ansell_gh_token';
+
+function getGhToken() {
+  try { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+  catch(e) { return ''; }
+}
+function setGhToken(v) {
+  try {
+    if (v) localStorage.setItem(GH_TOKEN_KEY, v);
+    else localStorage.removeItem(GH_TOKEN_KEY);
+  } catch(e) {}
+}
+
+function mostrarToast(msg, cor) {
+  const t = document.getElementById('toast-atualizar');
+  t.textContent = msg;
+  t.style.background = cor || '#1e293b';
+  t.style.display = 'block';
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => { t.style.display = 'none'; }, 6000);
+}
+
+function initAtualizarAgora() {
+  const btn = document.getElementById('btn-atualizar-agora');
+  const btnGear = document.getElementById('btn-gear-atualizar');
+  const painel = document.getElementById('painel-token');
+  const input = document.getElementById('input-gh-token');
+  const btnSalvar = document.getElementById('btn-salvar-gh-token');
+
+  btnGear.addEventListener('click', (e) => {
+    e.stopPropagation();
+    input.value = getGhToken();
+    painel.style.display = painel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', (e) => {
+    if (painel.style.display !== 'none' && !painel.contains(e.target) && e.target !== btnGear) {
+      painel.style.display = 'none';
+    }
+  });
+  btnSalvar.addEventListener('click', () => {
+    setGhToken(input.value.trim());
+    painel.style.display = 'none';
+    mostrarToast('Token salvo neste navegador.', '#166534');
+  });
+
+  btn.addEventListener('click', async () => {
+    let token = getGhToken();
+    if (!token) {
+      painel.style.display = 'block';
+      mostrarToast('Configure o token primeiro (ícone ⚙ ao lado).', '#92400e');
+      return;
+    }
+    btn.disabled = true;
+    const textoOriginal = btn.textContent;
+    btn.textContent = '⏳ Disparando…';
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/actions/workflows/${GH_WORKFLOW}/dispatches`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main' }),
+      });
+      if (resp.status === 204) {
+        mostrarToast('Atualização disparada! Deve aparecer aqui em alguns minutos (a página não recarrega sozinha).', '#166534');
+      } else if (resp.status === 401 || resp.status === 403) {
+        setGhToken('');
+        mostrarToast('Token inválido ou expirado. Configure de novo (ícone ⚙).', '#991b1b');
+      } else {
+        mostrarToast('Não foi possível disparar agora (erro ' + resp.status + '). Tente de novo em instantes.', '#991b1b');
+      }
+    } catch(e) {
+      mostrarToast('Não foi possível conectar ao GitHub agora. Verifique sua internet.', '#991b1b');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  });
+}
 const MES_NOMES = {};
 [...new Set(RAW.rows.flatMap(r=>[r.MES, r.MES_PREV]))].sort().forEach(m=>{ MES_NOMES[m]=_fmtMes(m); });
 
@@ -486,6 +586,7 @@ const MESES_TODOS = [...new Set(allRows.flatMap(r=>[r.MES, r.MES_PREV]))].sort()
 // --- INIT ---
 function init() {
   document.getElementById('tab-mural').href = MURAL_URL;
+  initAtualizarAgora();
   // Populate filters
   const tipos = RAW.meta.tipos_emissao;
   const ufs = RAW.meta.ufs;
