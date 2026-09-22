@@ -1,6 +1,9 @@
 {
   "id": "ansell",
-  "clientes_portal": ["Ansell", "Hercules"],
+  "clientes_portal": [
+    "Ansell",
+    "Hercules"
+  ],
   "template_relatorio": "AUDITORIA TELA 106_ANSELL",
   "prefixo_consolidado": "Base",
   "onedrive_consolidado": "C:\\Users\\Mauro Cesar Marques\\OneDrive - PORTOEXPRESS LOGISTICA LTDA\\Analise Ansell",
@@ -10,22 +13,179 @@
     "298063": "NO PRAZO"
   },
   "date_overrides": {
-    "268542": { "DATA DE AGENDAMENTO": "2026-02-03" },
-    "275297": { "PREV. ENTREGA": "2026-04-02" }
+    "268542": {
+      "DATA DE AGENDAMENTO": "2026-02-03"
+    },
+    "275297": {
+      "PREV. ENTREGA": "2026-04-02"
+    }
   },
   "observacoes_transito": {
-    "288846": [{"autor": "PortoEx", "texto": "Aguardando NF de Débito", "data": "17/09/2026 22:53"}],
-    "288854": [{"autor": "PortoEx", "texto": "Extravio parcial de 01 Volume", "data": "17/09/2026 22:56"}],
-    "288855": [{"autor": "PortoEx", "texto": "Aguardando NF de Débito", "data": "17/09/2026 22:53"}],
-    "293980": [{"autor": "PortoEx", "texto": "Aguardando NF de Débito", "data": "17/09/2026 22:54"}],
-    "294090": [{"autor": "PortoEx", "texto": "Aguardando NF de Débito", "data": "17/09/2026 22:53"}],
-    "295499": [{"autor": "PortoEx", "texto": "Aguardando Ansell Sobre Devolução", "data": "17/09/2026 22:55"}],
-    "298304": [{"autor": "PortoEx", "texto": "Extravio parcial de 01 Volume", "data": "17/09/2026 22:57"}],
-    "298308": [{"autor": "PortoEx", "texto": "Extravio parcial de 01 Volume", "data": "17/09/2026 22:57"}],
-    "298316": [{"autor": "PortoEx", "texto": "Extravio parcial de 02 Volumes", "data": "17/09/2026 22:57"}],
-    "298613": [{"autor": "PortoEx", "texto": "Aguardando Ansell Sobre Devolução", "data": "17/09/2026 22:55"}],
-    "298727": [{"autor": "PortoEx", "texto": "Aguardando Ansell Sobre Devolução", "data": "17/09/2026 22:55"}],
-    "298803": [{"autor": "PortoEx", "texto": "Aguardando Ansell Sobre Devolução", "data": "17/09/2026 22:56"}],
-    "298958": [{"autor": "PortoEx", "texto": "Aguardando Ansell Sobre Devolução", "data": "17/09/2026 22:55"}]
+    "288846": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "17/09/2026 22:53"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de débito",
+        "data": "22/09/2026 11:23"
+      }
+    ],
+    "288854": [
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 01 Volume",
+        "data": "17/09/2026 22:56"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "22/09/2026 11:29"
+      }
+    ],
+    "288855": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "17/09/2026 22:53"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de débito",
+        "data": "22/09/2026 11:31"
+      }
+    ],
+    "289028": [
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 1 volume, aguardando instruções de como devemos seguir com os demais.",
+        "data": "22/09/2026 11:34"
+      }
+    ],
+    "293980": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "17/09/2026 22:54"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "22/09/2026 11:34"
+      }
+    ],
+    "294090": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "17/09/2026 22:53"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "22/09/2026 11:36"
+      }
+    ],
+    "295486": [
+      {
+        "autor": "PortoEx",
+        "texto": "Agendamento devolução WS 22/09",
+        "data": "22/09/2026 11:37"
+      }
+    ],
+    "295499": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando Ansell Sobre Devolução",
+        "data": "17/09/2026 22:55"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução realizada 18/09",
+        "data": "22/09/2026 11:41"
+      }
+    ],
+    "295673": [
+      {
+        "autor": "PortoEx",
+        "texto": "devolução 22/09",
+        "data": "22/09/2026 11:53"
+      }
+    ],
+    "297570": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendamento 22/09",
+        "data": "22/09/2026 11:55"
+      }
+    ],
+    "297571": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendamento 22/09",
+        "data": "22/09/2026 11:55"
+      }
+    ],
+    "298304": [
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 01 Volume",
+        "data": "17/09/2026 22:57"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "22/09/2026 11:58"
+      }
+    ],
+    "298308": [
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 01 Volume",
+        "data": "17/09/2026 22:57"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente à caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "22/09/2026 12:01"
+      }
+    ],
+    "298316": [
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 02 Volumes",
+        "data": "17/09/2026 22:57"
+      }
+    ],
+    "298613": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando Ansell Sobre Devolução",
+        "data": "17/09/2026 22:55"
+      }
+    ],
+    "298727": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando Ansell Sobre Devolução",
+        "data": "17/09/2026 22:55"
+      }
+    ],
+    "298803": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando Ansell Sobre Devolução",
+        "data": "17/09/2026 22:56"
+      }
+    ],
+    "298958": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando Ansell Sobre Devolução",
+        "data": "17/09/2026 22:55"
+      }
+    ]
   }
 }
