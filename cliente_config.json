@@ -128,6 +128,13 @@
         "data": "22/09/2026 11:55"
       }
     ],
+    "297828": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 14:28"
+      }
+    ],
     "298304": [
       {
         "autor": "PortoEx",
@@ -157,6 +164,11 @@
         "autor": "PortoEx",
         "texto": "Extravio parcial de 02 Volumes",
         "data": "17/09/2026 22:57"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno da Ansell, que irá verificar junto a WS se os volumes se encontram no armazém.",
+        "data": "22/09/2026 17:52"
       }
     ],
     "298613": [
@@ -164,6 +176,18 @@
         "autor": "PortoEx",
         "texto": "Aguardando Ansell Sobre Devolução",
         "data": "17/09/2026 22:55"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "22/09/2026 17:55"
+      }
+    ],
+    "298719": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendado para 23/09, devido a problema mecânico apresentado pelo veículo no primeiro agendamento.",
+        "data": "22/09/2026 17:58"
       }
     ],
     "298727": [
@@ -171,6 +195,16 @@
         "autor": "PortoEx",
         "texto": "Aguardando Ansell Sobre Devolução",
         "data": "17/09/2026 22:55"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "22/09/2026 18:01"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell. Processo de devolução em andamento.",
+        "data": "23/09/2026 09:19"
       }
     ],
     "298803": [
@@ -178,6 +212,25 @@
         "autor": "PortoEx",
         "texto": "Aguardando Ansell Sobre Devolução",
         "data": "17/09/2026 22:56"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução a Wilson Sons, conforme autorizado em 22/09.",
+        "data": "22/09/2026 18:03"
+      }
+    ],
+    "298860": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação do destinatário referente a nova data disponível para agendamento.",
+        "data": "22/09/2026 18:04"
+      }
+    ],
+    "298871": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação do destinatário referente a nova data disponível para agendamento.",
+        "data": "22/09/2026 18:05"
       }
     ],
     "298958": [
@@ -185,6 +238,179 @@
         "autor": "PortoEx",
         "texto": "Aguardando Ansell Sobre Devolução",
         "data": "17/09/2026 22:55"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "22/09/2026 18:24"
+      }
+    ],
+    "299327": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 14:29"
+      }
+    ],
+    "299577": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando data de reagendamento",
+        "data": "23/09/2026 11:13"
+      }
+    ],
+    "299601": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando autorização para seguir no novo endereço de entrega",
+        "data": "23/09/2026 11:14"
+      }
+    ],
+    "300074": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 14:31"
+      }
+    ],
+    "300079": [
+      {
+        "autor": "PortoEx",
+        "texto": "Inicialmente identificado extravio parcial de 01 volume, volume faltante já localizado e em transferência. Aguardando chegada para solicitar reagendamento.",
+        "data": "23/09/2026 14:38"
+      }
+    ],
+    "300153": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 09:10"
+      }
+    ],
+    "300156": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 14:40"
+      }
+    ],
+    "300161": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 14:40"
+      }
+    ],
+    "300162": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 14:40"
+      }
+    ],
+    "300163": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 14:40"
+      }
+    ],
+    "300175": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 14:40"
+      }
+    ],
+    "300303": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 14:43"
+      }
+    ],
+    "300304": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 15:04"
+      }
+    ],
+    "300452": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 09:26"
+      }
+    ],
+    "300531": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell. Processo de devolução em andamento.",
+        "data": "23/09/2026 09:22"
+      }
+    ],
+    "300544": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do Comercial da Ansell para a Logística, com a orientação de como devemos prosseguir.",
+        "data": "23/09/2026 09:24"
+      }
+    ],
+    "300545": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do Comercial da Ansell para a Logística, com a orientação de como devemos prosseguir.",
+        "data": "23/09/2026 09:24"
+      }
+    ],
+    "300546": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do Comercial da Ansell para a Logística, com a orientação de como devemos prosseguir.",
+        "data": "23/09/2026 09:24"
+      }
+    ],
+    "300691": [
+      {
+        "autor": "PortoEx",
+        "texto": "Efetuando buscas pelo material.",
+        "data": "23/09/2026 15:06"
+      }
+    ],
+    "300735": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "23/09/2026 15:12"
+      }
+    ],
+    "301182": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 15:15"
+      }
+    ],
+    "301215": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do Comercial da Ansell para a Logística, com a orientação de como devemos prosseguir.",
+        "data": "23/09/2026 15:17"
+      }
+    ],
+    "301257": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno da Ansell com o agendamento prévio para seguirmos com a nova programação.",
+        "data": "23/09/2026 15:18"
+      }
+    ],
+    "301910": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "23/09/2026 15:58"
       }
     ]
   }
