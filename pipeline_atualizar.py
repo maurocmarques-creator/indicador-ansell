@@ -128,6 +128,30 @@ def atualizar_html(xlsx_consolidado: Path) -> bool:
     index_path.write_text(index_content, encoding="utf-8")
 
     log("index.html atualizado.")
+
+    # em_transito.json -- lista das minutas ainda em transito, publicada
+    # solta no repo pra o Mural buscar ao vivo (fetch direto do GitHub a
+    # cada carregamento). Assim, quando uma minuta e entregue e sai
+    # dessa lista aqui, ela some do Mural sozinha na proxima vez que
+    # alguem abrir, sem precisar eu republicar o Mural na mao.
+    em_transito = [
+        {
+            "minuta": r["MINUTA"],
+            "nf": r["NF_DOC"],
+            "cliente": r["CLIENTE"],
+            "destinatario": r["EFF_LOCAL"],
+            "cidade": r["EFF_CIDADE"],
+            "uf": r["EFF_UF"],
+            "prazo": r["DATA DE AGENDAMENTO"] or r["PREV. ENTREGA"],
+            "descricao": r["DESCRICAO_ULTIMO"],
+        }
+        for r in rows
+        if r["STATUS"] in ("EM TRANSITO DENTRO DO PRAZO", "EM TRANSITO FORA DO PRAZO")
+    ]
+    em_transito_path = REPO_DIR / "em_transito.json"
+    em_transito_path.write_text(json.dumps(em_transito, ensure_ascii=False), encoding="utf-8")
+    log(f"em_transito.json atualizado ({len(em_transito)} minutas em transito).")
+
     return dados_mudaram
 
 
@@ -148,18 +172,18 @@ def commit_e_push(dados_mudaram: bool):
     limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
-        ["git", "status", "--porcelain", "index.html"],
+        ["git", "status", "--porcelain", "index.html", "em_transito.json"],
         cwd=REPO_DIR, capture_output=True, text=True,
     )
-    log(f"git status --porcelain index.html -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
+    log(f"git status --porcelain index.html em_transito.json -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
     if status.returncode != 0:
         log("git status falhou -- abortando commit desta rodada.")
         return
     if not status.stdout.strip():
-        log("Nada para commitar (index.html identico ao publicado).")
+        log("Nada para commitar (index.html e em_transito.json identicos ao publicado).")
         return
 
-    subprocess.run(["git", "add", "index.html"], cwd=REPO_DIR, check=True)
+    subprocess.run(["git", "add", "index.html", "em_transito.json"], cwd=REPO_DIR, check=True)
     sufixo = "com dados novos" if dados_mudaram else "sem dados novos, so verificacao"
     mensagem = f"Atualizacao automatica ({sufixo}) — {date.today().isoformat()}"
     subprocess.run(["git", "commit", "-m", mensagem], cwd=REPO_DIR, check=True)

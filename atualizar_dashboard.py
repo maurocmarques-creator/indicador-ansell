@@ -252,6 +252,29 @@ def main():
     index_path.write_text(index_content, encoding='utf-8')
     print(f'Atualizado: {index_path}')
 
+    # em_transito.json -- lista das minutas ainda em transito (mesmo
+    # criterio da aba "Em Transito" do dashboard), publicada solta no
+    # repo pra o Mural buscar ao vivo (fetch direto do GitHub, sem
+    # precisar que eu republique o Mural toda vez que uma minuta e
+    # entregue e sai da lista).
+    em_transito = [
+        {
+            'minuta': r['MINUTA'],
+            'nf': r['NF_DOC'],
+            'cliente': r['CLIENTE'],
+            'destinatario': r['EFF_LOCAL'],
+            'cidade': r['EFF_CIDADE'],
+            'uf': r['EFF_UF'],
+            'prazo': r['DATA DE AGENDAMENTO'] or r['PREV. ENTREGA'],
+            'descricao': r['DESCRICAO_ULTIMO'],
+        }
+        for r in rows
+        if r['STATUS'] in ('EM TRANSITO DENTRO DO PRAZO', 'EM TRANSITO FORA DO PRAZO')
+    ]
+    em_transito_path = dash_dir / 'em_transito.json'
+    em_transito_path.write_text(json.dumps(em_transito, ensure_ascii=False), encoding='utf-8')
+    print(f'Atualizado: {em_transito_path} ({len(em_transito)} minutas em transito)')
+
 
 if __name__ == '__main__':
     main()
