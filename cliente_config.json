@@ -21,6 +21,13 @@
     }
   },
   "observacoes_transito": {
+    "287695": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "28/09/2026 14:16"
+      }
+    ],
     "288846": [
       {
         "autor": "PortoEx",
@@ -31,6 +38,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de débito",
         "data": "22/09/2026 11:23"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "28/09/2026 14:17"
       }
     ],
     "288854": [
@@ -43,6 +55,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
         "data": "22/09/2026 11:29"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "28/09/2026 14:35"
       }
     ],
     "288855": [
@@ -55,6 +72,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de débito",
         "data": "22/09/2026 11:31"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "28/09/2026 14:27"
       }
     ],
     "289028": [
@@ -62,6 +84,11 @@
         "autor": "PortoEx",
         "texto": "Extravio parcial de 1 volume, aguardando instruções de como devemos seguir com os demais.",
         "data": "22/09/2026 11:34"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Extravio parcial de 1 volume, aguardando instruções de como devemos seguir com os demais.",
+        "data": "28/09/2026 14:42"
       }
     ],
     "293980": [
@@ -74,6 +101,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "22/09/2026 11:34"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "28/09/2026 14:43"
       }
     ],
     "294090": [
@@ -86,6 +118,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "22/09/2026 11:36"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando NF de Débito",
+        "data": "28/09/2026 14:44"
       }
     ],
     "295486": [
@@ -133,6 +170,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 14:28"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "28/09/2026 14:45"
       }
     ],
     "298304": [
@@ -145,6 +187,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
         "data": "22/09/2026 11:58"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "28/09/2026 15:05"
       }
     ],
     "298308": [
@@ -157,6 +204,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando a confirmação do valor referente à caixa extraviada para emissão e envio da carta de extravio.",
         "data": "22/09/2026 12:01"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando a confirmação do valor referente à caixa extraviada para emissão e envio da carta de extravio.",
+        "data": "28/09/2026 15:49"
       }
     ],
     "298316": [
@@ -169,6 +221,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando retorno da Ansell, que irá verificar junto a WS se os volumes se encontram no armazém.",
         "data": "22/09/2026 17:52"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno da Ansell, que irá verificar junto a WS se os volumes se encontram no armazém.",
+        "data": "28/09/2026 15:52"
       }
     ],
     "298613": [
@@ -181,6 +238,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "22/09/2026 17:55"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "28/09/2026 16:29"
       }
     ],
     "298719": [
@@ -205,6 +267,11 @@
         "autor": "PortoEx",
         "texto": "Devolução autorizada pela Ansell. Processo de devolução em andamento.",
         "data": "23/09/2026 09:19"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "devolução agendada. ID 19963",
+        "data": "28/09/2026 16:31"
       }
     ],
     "298803": [
@@ -217,6 +284,11 @@
         "autor": "PortoEx",
         "texto": "Em processo de devolução a Wilson Sons, conforme autorizado em 22/09.",
         "data": "22/09/2026 18:03"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução agendada 02/10. ID 19964",
+        "data": "28/09/2026 16:34"
       }
     ],
     "298860": [
@@ -250,6 +322,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 14:29"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "28/09/2026 16:46"
       }
     ],
     "299577": [
@@ -257,6 +334,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando data de reagendamento",
         "data": "23/09/2026 11:13"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando data de reagendamento",
+        "data": "28/09/2026 16:45"
       }
     ],
     "299601": [
@@ -264,6 +346,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando autorização para seguir no novo endereço de entrega",
         "data": "23/09/2026 11:14"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientação do cliente para programação das entregas em Itapeva/MG.",
+        "data": "28/09/2026 16:51"
       }
     ],
     "300074": [
@@ -278,6 +365,11 @@
         "autor": "PortoEx",
         "texto": "Inicialmente identificado extravio parcial de 01 volume, volume faltante já localizado e em transferência. Aguardando chegada para solicitar reagendamento.",
         "data": "23/09/2026 14:38"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "O volume se encontra em transferência. Assim que chegar abase, solicitaremos o reagendamento da entrega.",
+        "data": "28/09/2026 16:53"
       }
     ],
     "300153": [
@@ -285,6 +377,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 09:10"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "28/09/2026 16:54"
       }
     ],
     "300156": [
@@ -292,6 +389,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 14:40"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "28/09/2026 16:55"
       }
     ],
     "300161": [
@@ -299,6 +401,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 14:40"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "28/09/2026 16:55"
       }
     ],
     "300162": [
@@ -306,6 +413,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 14:40"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "28/09/2026 16:55"
       }
     ],
     "300163": [
@@ -313,6 +425,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 14:40"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "28/09/2026 16:55"
       }
     ],
     "300175": [
@@ -320,6 +437,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 14:40"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
+        "data": "28/09/2026 16:55"
       }
     ],
     "300303": [
