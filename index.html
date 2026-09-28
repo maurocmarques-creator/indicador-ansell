@@ -34,6 +34,7 @@ header{background:var(--primary);color:#fff;padding:0 24px;display:flex;align-it
 .kpi{background:#fff;border-radius:10px;padding:16px 20px;box-shadow:var(--shadow);border-left:4px solid var(--primary-light)}
 .kpi.green{border-left-color:var(--green)}
 .kpi.orange{border-left-color:var(--orange)}
+.kpi.yellow{border-left-color:var(--yellow)}
 .kpi.red{border-left-color:var(--accent)}
 .kpi label{font-size:.72rem;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .tag-filtro{font-size:.68rem;font-weight:500;text-transform:none;letter-spacing:0;color:#94a3b8}
@@ -102,6 +103,7 @@ tr:last-child td{border-bottom:none}
   <div class="tab" onclick="showTab('perf-dest')">Perf. Destinatário</div>
   <div class="tab" onclick="showTab('barra-perf')">Barra Performance</div>
   <div class="tab" onclick="showTab('transito')">🚚 Em Trânsito</div>
+  <div class="tab" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
   <div class="tab" onclick="showTab('expectativa')">📊 Expectativa</div>
   <div class="tab" onclick="showTab('mapa')">🗺 Mapa</div>
   <div style="position:relative;margin-left:auto;display:flex;align-items:center;gap:2px">
@@ -331,6 +333,28 @@ tr:last-child td{border-bottom:none}
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Emissão</th><th>Prazo</th><th>Dias Restantes</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-dentro"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB: ENTREGAS ANTECIPADAS -->
+<div id="tab-antecipadas" class="content">
+  <div class="kpi-row">
+    <div class="kpi"><label>Sem Agendamento <span class="tag-filtro">(Prev. Entrega)</span></label><div class="value" id="kpi-ant-total">-</div><div class="sub">entregues, sem data de agendamento</div></div>
+    <div class="kpi green"><label>Antecipadas</label><div class="value" id="kpi-ant-antes">-</div><div class="sub" id="kpi-ant-antes-pct">-</div></div>
+    <div class="kpi yellow"><label>No Dia Previsto</label><div class="value" id="kpi-ant-nodia">-</div><div class="sub" id="kpi-ant-nodia-pct">-</div></div>
+    <div class="kpi orange"><label>Após o Prazo</label><div class="value" id="kpi-ant-apos">-</div><div class="sub" id="kpi-ant-apos-pct">-</div></div>
+  </div>
+  <p style="font-size:.78rem;color:#64748b;margin:-8px 0 16px">Considera apenas entregas <b>sem data de agendamento</b>, comparando a data de entrega efetiva contra a previsão de entrega (Prev. Entrega). Entregas com agendamento seguem a data combinada com o cliente, não fazem parte dessa análise.</p>
+  <div class="chart-card" style="margin-bottom:16px">
+    <h3>Entregas Antecipadas por Mês <span class="tag-filtro">(Prev. Entrega)</span></h3>
+    <canvas id="ch-antecipadas-mes" style="max-height:260px"></canvas>
+  </div>
+  <div class="table-card">
+    <h3>Entregas Antecipadas por Mês <span class="tag-filtro">(Prev. Entrega)</span></h3>
+    <table>
+      <thead><tr><th>Mês</th><th>Total Sem Agendamento</th><th>Antecipada</th><th>%</th><th>No Dia</th><th>%</th><th>Após o Prazo</th><th>%</th></tr></thead>
+      <tbody id="tb-antecipadas-mes"></tbody>
     </table>
   </div>
 </div>
@@ -862,6 +886,7 @@ function renderAll() {
   if (document.getElementById('tab-mapa').classList.contains('active')) renderMapa();
   if (document.getElementById('tab-expectativa').classList.contains('active')) renderExpectativa();
   if (document.getElementById('tab-transito').classList.contains('active')) renderTransito();
+  if (document.getElementById('tab-antecipadas').classList.contains('active')) renderAntecipadas();
 }
 
 // --- TAB: TOTAIS ---
@@ -1462,6 +1487,77 @@ function exportarTransitoExcel() {
   XLSX.writeFile(wb, `em_transito_conferencia_${stamp}.xlsx`);
 }
 
+// --- ENTREGAS ANTECIPADAS ---
+// So considera entregas SEM data de agendamento (quando ha agendamento,
+// o combinado com o cliente e a propria data agendada, entao "antes"
+// ou "depois" da Prev. Entrega original deixa de fazer sentido).
+// Compara DATA ENTREGA x PREV. ENTREGA (strings ISO 'AAAA-MM-DD',
+// comparaveis diretamente): antes = antecipada, igual = no dia, depois
+// = apos o prazo.
+function renderAntecipadas() {
+  const rows = filteredRowsPerf.filter(r =>
+    r['DATA ENTREGA'] && !r['DATA DE AGENDAMENTO'] && r['PREV. ENTREGA']
+  );
+
+  const antes = rows.filter(r => r['DATA ENTREGA'] < r['PREV. ENTREGA']);
+  const noDia = rows.filter(r => r['DATA ENTREGA'] === r['PREV. ENTREGA']);
+  const apos  = rows.filter(r => r['DATA ENTREGA'] > r['PREV. ENTREGA']);
+  const tot = rows.length;
+  const pct = n => tot ? (n/tot*100).toFixed(1)+'% do total' : '0.0% do total';
+
+  document.getElementById('kpi-ant-total').textContent = tot.toLocaleString('pt-BR');
+  document.getElementById('kpi-ant-antes').textContent = antes.length.toLocaleString('pt-BR');
+  document.getElementById('kpi-ant-antes-pct').textContent = pct(antes.length);
+  document.getElementById('kpi-ant-nodia').textContent = noDia.length.toLocaleString('pt-BR');
+  document.getElementById('kpi-ant-nodia-pct').textContent = pct(noDia.length);
+  document.getElementById('kpi-ant-apos').textContent = apos.length.toLocaleString('pt-BR');
+  document.getElementById('kpi-ant-apos-pct').textContent = pct(apos.length);
+
+  const meses = [...new Set(rows.map(r=>r.MES_PREV))].sort();
+  const porMes = meses.map(m => {
+    const doMes = rows.filter(r=>r.MES_PREV===m);
+    return {
+      mes: m,
+      nome: MES_NOMES[m] || m,
+      total: doMes.length,
+      antes: doMes.filter(r=>r['DATA ENTREGA'] < r['PREV. ENTREGA']).length,
+      noDia: doMes.filter(r=>r['DATA ENTREGA'] === r['PREV. ENTREGA']).length,
+      apos: doMes.filter(r=>r['DATA ENTREGA'] > r['PREV. ENTREGA']).length,
+    };
+  });
+
+  destroyChart('antecipadas-mes');
+  charts['antecipadas-mes'] = new Chart(document.getElementById('ch-antecipadas-mes'), {
+    type: 'bar',
+    data: {
+      labels: porMes.map(m=>m.nome),
+      datasets: [
+        { label: 'Antecipada', data: porMes.map(m=>m.antes), backgroundColor: COLORS.green },
+        { label: 'No Dia', data: porMes.map(m=>m.noDia), backgroundColor: COLORS.yellow },
+        { label: 'Após o Prazo', data: porMes.map(m=>m.apos), backgroundColor: COLORS.accent },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v.toLocaleString('pt-BR') } } },
+      plugins: { legend: { position: 'bottom' }, datalabels: DL_BAR_STACKED },
+    },
+  });
+
+  document.getElementById('tb-antecipadas-mes').innerHTML = porMes.length
+    ? porMes.map(m => `<tr>
+        <td>${m.nome}</td>
+        <td>${m.total.toLocaleString('pt-BR')}</td>
+        <td>${m.antes.toLocaleString('pt-BR')}</td>
+        <td>${m.total ? (m.antes/m.total*100).toFixed(1) : '0.0'}%</td>
+        <td>${m.noDia.toLocaleString('pt-BR')}</td>
+        <td>${m.total ? (m.noDia/m.total*100).toFixed(1) : '0.0'}%</td>
+        <td>${m.apos.toLocaleString('pt-BR')}</td>
+        <td>${m.total ? (m.apos/m.total*100).toFixed(1) : '0.0'}%</td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega sem agendamento no período filtrado</td></tr>';
+}
+
 // --- EXPECTATIVA ---
 function setExpCliente(cli) {
   _expCliente = cli;
@@ -2030,6 +2126,7 @@ function showTab(id) {
   if (id === 'mapa') renderMapa();
   if (id === 'expectativa') renderExpectativa();
   if (id === 'transito') renderTransito();
+  if (id === 'antecipadas') renderAntecipadas();
 }
 
 // Start
