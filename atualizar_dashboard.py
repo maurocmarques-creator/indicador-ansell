@@ -63,6 +63,77 @@ UF_CENTROID = {
     'SE': (-10.57, -37.45), 'SP': (-22.25, -48.63), 'TO': (-10.25, -48.25),
 }
 
+# Coordenadas aproximadas por cidade (chave "CIDADE|UF", mesmo texto de
+# EFF_CIDADE/EFF_UF), usadas no mapa em vez do centroide do estado quando
+# disponivel -- sem isso, todas as cidades de um mesmo estado caiam
+# exatamente no mesmo ponto (visivel principalmente com o zoom por
+# estado). Uso apenas decorativo (mesma ressalva do UF_CENTROID); cidade
+# que nao estiver aqui cai de volta no centroide do estado. Cobre as
+# cidades que ja apareceram nos dados -- uma cidade nova, ate ser
+# adicionada aqui, some pro centro do estado (nao quebra nada).
+CITY_COORD = {
+    'GUARULHOS|SP': (-23.4538, -46.5333), 'SERRA|ES': (-20.1289, -40.3078),
+    'GARUVA|SC': (-26.0292, -48.8564), 'SAO JOSE DOS PINHAIS|PR': (-25.5347, -49.2058),
+    'ITAJUBA|MG': (-22.4256, -45.4528), 'CAXIAS DO SUL|RS': (-29.1678, -51.1794),
+    'ARACARIGUAMA|SP': (-23.4325, -47.0611), 'CAMPINAS|SP': (-22.9099, -47.0626),
+    'GOIANIA|GO': (-16.6869, -49.2648), 'SOROCABA|SP': (-23.5015, -47.4526),
+    'SAO PAULO|SP': (-23.5505, -46.6333), 'CONTAGEM|MG': (-19.9317, -44.0536),
+    'CASCAVEL|PR': (-24.9555, -53.4552), 'SANTO ANDRE|SP': (-23.6639, -46.5383),
+    'SAO JOSE|SC': (-27.5964, -48.6262), 'ATIBAIA|SP': (-23.1170, -46.5503),
+    'INDAIAL|SC': (-26.8983, -49.2308), 'SAO BENTO DO SUL|SC': (-26.2503, -49.3789),
+    'LAURO DE FREITAS|BA': (-12.8944, -38.3247), 'JOINVILLE|SC': (-26.3045, -48.8487),
+    'CRICIUMA|SC': (-28.6775, -49.3697), 'PARAUAPEBAS|PA': (-6.0675, -49.9022),
+    'MARINGA|PR': (-23.4205, -51.9331), 'JABOATAO DOS GUARARAPES|PE': (-8.1130, -35.0150),
+    'SAO BERNARDO DO CAMPO|SP': (-23.6944, -46.5654), 'PELOTAS|RS': (-31.7654, -52.3376),
+    'PATO BRANCO|PR': (-26.2288, -52.6706), 'RIO DE JANEIRO|RJ': (-22.9068, -43.1729),
+    'SAO LUIZ|MA': (-2.5307, -44.3068), 'GRAVATAI|RS': (-29.9442, -50.9925),
+    'BARUERI|SP': (-23.5104, -46.8761), 'PONTE NOVA|MG': (-20.4092, -42.9036),
+    'GUARAMIRIM|SC': (-26.4783, -49.0294), 'SAO GABRIEL DO OESTE|MS': (-19.3953, -54.5578),
+    'JUNDIAI|SP': (-23.1864, -46.8842), 'PIRACICABA|SP': (-22.7253, -47.6492),
+    'CURITIBA|PR': (-25.4284, -49.2733), 'MANAUS|AM': (-3.1190, -60.0217),
+    'LIMEIRA|SP': (-22.5646, -47.4017), 'DIAS D AVILA|BA': (-12.6047, -38.2986),
+    'CAUCAIA|CE': (-3.7361, -38.6531), 'OLIVEIRA|MG': (-20.6975, -44.8283),
+    'MACAE|RJ': (-22.3708, -41.7869), 'EMBU|SP': (-23.6489, -46.8519),
+    'CHAPECO|SC': (-27.1004, -52.6152), 'CAMACARI|BA': (-12.6975, -38.3242),
+    'COTIA|SP': (-23.6019, -46.9188), 'PROMISSAO|SP': (-21.5361, -49.8603),
+    'BELO HORIZONTE|MG': (-19.9167, -43.9345), 'UBERLANDIA|MG': (-18.9186, -48.2772),
+    'MATELANDIA|PR': (-25.1611, -53.9622), 'NANUQUE|MG': (-17.8394, -40.3536),
+    'BATAGUASSU|MS': (-21.7156, -52.4239), 'NOVO HAMBURGO|RS': (-29.6783, -51.1306),
+    'ANAPOLIS|GO': (-16.3267, -48.9528), 'BETIM|MG': (-19.9678, -44.1983),
+    'TATUI|SP': (-23.3556, -47.8492), 'COLATINA|ES': (-19.5386, -40.6306),
+    'ITAUNA|MG': (-20.0736, -44.5764), 'ANANINDEUA|PA': (-1.3656, -48.3722),
+    'ERECHIM|RS': (-27.6342, -52.2739), 'ITATIBA|SP': (-23.0064, -46.8386),
+    'SAO SEBASTIAO DO OESTE|MG': (-20.2764, -45.1194), 'VARZEA GRANDE|MT': (-15.6467, -56.1325),
+    'LINS|SP': (-21.6789, -49.7425), 'JOAO MONLEVADE|MG': (-19.8083, -43.1731),
+    'JUIZ DE FORA|MG': (-21.7642, -43.3503), 'CABO DE SANTO AGOSTINHO|PE': (-8.2892, -35.0353),
+    'TAPEJARA|RS': (-28.0678, -52.0086), 'MARECHAL CANDIDO RONDON|PR': (-24.5581, -54.0567),
+    'LAGOA DA PRATA|MG': (-20.0225, -45.5478), 'BELEM|PA': (-1.4558, -48.4902),
+    'CASTRO|PR': (-24.7911, -50.0119), 'CAMPO MOURAO|PR': (-24.0463, -52.3776),
+    'SANTA HELENA|PR': (-24.8583, -54.3339), 'ITAIPULANDIA|PR': (-25.1197, -54.3392),
+    'MEDIANEIRA|PR': (-25.2975, -54.0931), 'RIO CLARO|SP': (-22.4114, -47.5614),
+    'ITAPEVI|SP': (-23.5489, -46.8494), 'MARAVILHA|SC': (-26.7681, -53.1697),
+    'ENCANTADO|RS': (-29.2350, -51.8692), 'SAO MIGUEL DO IGUACU|PR': (-25.3583, -54.2394),
+    'FORTALEZA|CE': (-3.7319, -38.5267), 'SARANDI|RS': (-27.9436, -52.9247),
+    'JOACABA|SC': (-27.1758, -51.5050), 'INDAIATUBA|SP': (-23.0917, -47.2181),
+    'SAO JOSE DO RIO PRETO|SP': (-20.8113, -49.3758), 'ANAURILANDIA|MS': (-22.1839, -52.7208),
+    'PAULINIA|SP': (-22.7614, -47.1544), 'ABELARDO LUZ|SC': (-26.5639, -52.3269),
+    'SERTAOZINHO|SP': (-21.1378, -48.0431), 'ITAPAGIPE|MG': (-19.8964, -49.5988),
+    'CANOAS|RS': (-29.9177, -51.1836), 'TRES LAGOAS|MS': (-20.7849, -51.7005),
+    'EXTREMA|MG': (-22.8547, -46.3197), 'TRES CORACOES|MG': (-21.6989, -45.2536),
+    'PASSO FUNDO|RS': (-28.2636, -52.4064), 'TAUBATE|SP': (-23.0264, -45.5553),
+    'RESENDE|RJ': (-22.4658, -44.4467), 'TREZE TILIAS|SC': (-26.9600, -51.4106),
+    'IPOJUCA|PE': (-8.4013, -35.0631), 'SANTA TEREZINHA DE ITAIPU|PR': (-25.4692, -54.4022),
+    'VILA VELHA|ES': (-20.3297, -40.2925), 'PORTO ALEGRE|RS': (-30.0346, -51.2177),
+    'DUQUE DE CAXIAS|RJ': (-22.7858, -43.3117), 'LINHARES|ES': (-19.3944, -40.0717),
+    'CARAGUATATUBA|SP': (-23.6206, -45.4131), 'TEIXEIRA DE FREITAS|BA': (-17.5406, -39.7422),
+    'MANDAGUARI|PR': (-23.5433, -51.6717), 'CATALAO|GO': (-18.1658, -47.9464),
+    'VIANA|ES': (-20.3908, -40.4967), 'QUILOMBO|SC': (-26.7247, -52.7328),
+    'MIRASSOL D OESTE|MT': (-15.6756, -58.0908), 'BRUSQUE|SC': (-27.0981, -48.9106),
+    'MACEIO|AL': (-9.6658, -35.7353), 'OSASCO|SP': (-23.5325, -46.7917),
+    'CUBATAO|SP': (-23.8950, -46.4247), 'SAO JOSE DOS CAMPOS|SP': (-23.2237, -45.9009),
+    'POMERODE|SC': (-26.7378, -49.1758),
+}
+
 
 def iso(d):
     if pd.isna(d):
@@ -139,6 +210,8 @@ def build_rows(df, hoje=None):
 
         tipo = r[tipo_col]
         eff_uf = r['UF ENTREGA'] if not pd.isna(r['UF ENTREGA']) else ''
+        eff_cidade = r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else ''
+        coord = CITY_COORD.get(f"{eff_cidade}|{eff_uf}") or UF_CENTROID.get(eff_uf)
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
         status = STATUS_OVERRIDES.get(
@@ -174,13 +247,13 @@ def build_rows(df, hoje=None):
             'PREV. ENTREGA': iso(prev_entrega),
             'DATA DE AGENDAMENTO': iso(data_agendamento),
             'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
-            'EFF_CIDADE': r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else '',
+            'EFF_CIDADE': eff_cidade,
             'DESCRICAO_ULTIMO': descricao_ultimo,
             'OBSERVACOES': OBSERVACOES_TRANSITO.get(minuta, []),
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
-            'LAT': UF_CENTROID[eff_uf][0] if eff_uf in UF_CENTROID else None,
-            'LNG': UF_CENTROID[eff_uf][1] if eff_uf in UF_CENTROID else None,
+            'LAT': coord[0] if coord else None,
+            'LNG': coord[1] if coord else None,
         })
     return rows
 
