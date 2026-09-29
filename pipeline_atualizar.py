@@ -227,6 +227,16 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 "nf": str(r["NF/DOC"]),
                 "nf_data": _fmt_nf_data(r["NF DATA"]),
                 "cliente": str(r["CLIENTE"]),
+                # Campos do relatorio adicionados depois (destinatario e
+                # local de entrega) -- .get com default, pra nao quebrar
+                # se o relatorio no portal mudar de novo e essas colunas
+                # sumirem/forem renomeadas.
+                "destino": str(r.get("DESTINO", "")),
+                "cidade_destino": str(r.get("CIDADE DESTINO", "")),
+                "uf_destino": str(r.get("UF DESTINO", "")),
+                "local_entrega": str(r.get("LOCAL ENTREGA", "")),
+                "cidade_entrega": str(r.get("CIDADE ENTREGA", "")),
+                "uf_entrega": str(r.get("UF ENTREGA", "")),
                 "coletada": str(r["Coletada"]),
             }
             for _, r in consolidado.iterrows()
