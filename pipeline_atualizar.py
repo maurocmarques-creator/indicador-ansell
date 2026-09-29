@@ -160,16 +160,21 @@ def _fmt_nf_data(v):
         return ""
 
 
-def _agrupar_nf_duplicada(df):
-    """Nao remove mais nada: se uma NF aparece em mais de uma minuta (ex.:
-    cancelada numa minuta e depois reemitida com CT-e valido em outra),
-    TODAS as linhas continuam aparecendo -- so reordena pra que a linha
-    com Coletada='Coletado' dessa NF venha primeiro, e as demais
-    (Cancelada/Pendente da mesma NF) fiquem logo abaixo dela, uma
-    embaixo da outra. Linhas de NF sem duplicata mantem a posicao
-    original (ordem de extracao/minuta). NF/DOC pode ter varias notas
-    numa celula so (separadas por virgula) -- usa a primeira como chave
-    de agrupamento."""
+def _separar_historico_nf(df):
+    """Quando uma NF tem uma linha 'Coletado' e tambem outra(s) linha(s)
+    da mesma NF com status diferente (Cancelada/Pendente) em minutas
+    diferentes: a cancelada/pendente e uma minuta que nao vale mais (foi
+    cancelada e reemitida depois, entao nao conta) -- tira ela da lista
+    principal (nao conta nos KPIs nem aparece solta na tabela) e guarda
+    como "historico" dentro da linha 'Coletado' correspondente, pra
+    aparecer so quando o operador clicar/expandir aquela linha. NF/DOC
+    pode ter varias notas numa celula (separadas por virgula) -- usa a
+    primeira como chave de agrupamento.
+
+    Retorna (df_principal, historico_por_posicao, n_no_historico), onde
+    historico_por_posicao mapeia a posicao (0-based, apos reset_index)
+    da linha 'Coletado' dentro de df_principal para uma lista de Series
+    (as linhas antigas/canceladas que ficaram de fora)."""
     df = df.reset_index(drop=True)
 
     def primeira_nota(cel):
@@ -183,15 +188,29 @@ def _agrupar_nf_duplicada(df):
         if coletada == "Coletado" and k is not None and k not in pos_coletado:
             pos_coletado[k] = i
 
-    def ordem(i):
-        k = chave.iloc[i]
-        ancora = pos_coletado.get(k, i)
-        eh_coletado = 0 if df["Coletada"].iloc[i] == "Coletado" else 1
-        return (ancora, eh_coletado, i)
+    historico_por_pai = {}
+    indices_historico = set()
+    for i, (k, coletada) in enumerate(zip(chave, df["Coletada"])):
+        if coletada != "Coletado" and k in pos_coletado:
+            historico_por_pai.setdefault(pos_coletado[k], []).append(i)
+            indices_historico.add(i)
 
-    idx_ordenado = sorted(range(len(df)), key=ordem)
-    n_reagrupadas = sum(1 for i in range(len(df)) if pos_coletado.get(chave.iloc[i]) not in (None, i))
-    return df.iloc[idx_ordenado].reset_index(drop=True), n_reagrupadas
+    df_principal = df.drop(index=list(indices_historico)).reset_index(drop=True)
+
+    mapa_pos_nova = {}
+    pos_nova = 0
+    for i in range(len(df)):
+        if i in indices_historico:
+            continue
+        mapa_pos_nova[i] = pos_nova
+        pos_nova += 1
+
+    historico_por_posicao = {
+        mapa_pos_nova[pai_idx]: [df.iloc[fi] for fi in filhos_idx]
+        for pai_idx, filhos_idx in historico_por_pai.items()
+    }
+
+    return df_principal, historico_por_posicao, len(indices_historico)
 
 
 def _mapear_coletada(status_cte):
@@ -241,8 +260,8 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
         consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
         log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
         consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
-        consolidado, n_reagrupadas = _agrupar_nf_duplicada(consolidado)
-        log(f"Linhas reagrupadas por NF duplicada (mostrando logo abaixo da linha 'Coletado'): {n_reagrupadas}.")
+        consolidado, historico_por_posicao, n_historico = _separar_historico_nf(consolidado)
+        log(f"Entradas movidas pro historico (NF cancelada/pendente reemitida em outra minuta, nao conta mais nos KPIs): {n_historico}.")
 
         # Guarda tambem os xlsx (bruto + consolidado) na pasta do cliente no
         # OneDrive, pro Mauro poder abrir/conferir manualmente quando quiser
@@ -254,8 +273,8 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
             consolidado.to_excel(ONEDRIVE_ANALISE_ANSELL / "Relatorio_Notas_Fiscais.xlsx", index=False)
             log("Relatorio_Notas_Fiscais.xlsx e arquivos brutos atualizados no OneDrive.")
 
-        nf_status = [
-            {
+        def linha_para_dict(r):
+            return {
                 "cliente_origem": str(r["CLIENTE_ORIGEM"]),
                 "minuta": str(r["MINUTA"]),
                 "cte": str(r["CTE"]),
@@ -281,9 +300,16 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 "uf_entrega": str(r.get("UF ENTREGA", "")),
                 "coletada": str(r["Coletada"]),
             }
-            for _, r in consolidado.iterrows()
-        ]
-        log(f"Status NF extraido ({len(nf_status)} linhas).")
+
+        nf_status = []
+        for pos, (_, r) in enumerate(consolidado.iterrows()):
+            item = linha_para_dict(r)
+            hist_rows = historico_por_posicao.get(pos)
+            if hist_rows:
+                item["historico"] = [linha_para_dict(h) for h in hist_rows]
+            nf_status.append(item)
+
+        log(f"Status NF extraido ({len(nf_status)} linhas principais, {n_historico} no historico).")
         return nf_status
     except Exception:
         import traceback
