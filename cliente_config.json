@@ -366,6 +366,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientação do cliente para programação das entregas em Itapeva/MG.",
         "data": "28/09/2026 16:51"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
+        "data": "29/09/2026 10:35"
       }
     ],
     "300074": [
@@ -540,6 +545,13 @@
         "data": "23/09/2026 15:06"
       }
     ],
+    "300730": [
+      {
+        "autor": "PortoEx",
+        "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
+        "data": "29/09/2026 10:35"
+      }
+    ],
     "300735": [
       {
         "autor": "PortoEx",
@@ -559,6 +571,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando retorno do Comercial da Ansell para a Logística, com a orientação de como devemos prosseguir.",
         "data": "23/09/2026 15:17"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
+        "data": "29/09/2026 10:35"
       }
     ],
     "301257": [
@@ -580,6 +597,20 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 15:58"
+      }
+    ],
+    "302089": [
+      {
+        "autor": "PortoEx",
+        "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
+        "data": "29/09/2026 10:36"
+      }
+    ],
+    "302092": [
+      {
+        "autor": "PortoEx",
+        "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
+        "data": "29/09/2026 10:35"
       }
     ]
   }
