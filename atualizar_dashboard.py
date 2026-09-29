@@ -132,6 +132,15 @@ CITY_COORD = {
     'MACEIO|AL': (-9.6658, -35.7353), 'OSASCO|SP': (-23.5325, -46.7917),
     'CUBATAO|SP': (-23.8950, -46.4247), 'SAO JOSE DOS CAMPOS|SP': (-23.2237, -45.9009),
     'POMERODE|SC': (-26.7378, -49.1758),
+    # Adicionadas quando "Destinatario" passou a ser sempre o cliente final
+    # (DESTINO), nao mais o local de entrega/redespacho -- surgiram
+    # cidades novas no mapa que antes nao apareciam.
+    'ALHANDRA|PB': (-7.4197, -34.9142), 'ALUMINIO|SP': (-23.5306, -47.2617),
+    'ARACAJU|SE': (-10.9472, -37.0731), 'ARAUCARIA|PR': (-25.5883, -49.4106),
+    'CASTANHAL|PA': (-1.2938, -47.9257), 'JACAREI|SP': (-23.3053, -45.9658),
+    'JANAUBA|MG': (-15.8019, -43.3117), 'MATOZINHOS|MG': (-19.5514, -44.0294),
+    'MOSSORO|RN': (-5.1875, -37.3441), 'PORTO REAL|RJ': (-22.4192, -44.2831),
+    'RONDONOPOLIS|MT': (-16.4706, -54.6356), 'TANGARA DA SERRA|MT': (-14.6228, -57.4931),
 }
 
 
@@ -139,6 +148,17 @@ def iso(d):
     if pd.isna(d):
         return ''
     return d.strftime('%Y-%m-%d')
+
+
+def _primeiro_preenchido(*valores):
+    """Primeiro valor nao vazio/nao NaN da lista (trata tanto celula vazia
+    do Excel quanto string em branco, ja que o pandas pode retornar as
+    duas coisas dependendo da planilha). Se nenhum estiver preenchido,
+    retorna string vazia."""
+    for v in valores:
+        if not pd.isna(v) and str(v).strip():
+            return v
+    return ''
 
 
 def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo=''):
@@ -209,8 +229,17 @@ def build_rows(df, hoje=None):
             prev_entrega = pd.Timestamp(date_over['PREV. ENTREGA'])
 
         tipo = r[tipo_col]
-        eff_uf = r['UF ENTREGA'] if not pd.isna(r['UF ENTREGA']) else ''
-        eff_cidade = r['CIDADE ENTREGA'] if not pd.isna(r['CIDADE ENTREGA']) else ''
+        # "Destinatario" no dashboard e sempre o cliente final (DESTINO/
+        # CIDADE DESTINO/UF DESTINO -- nunca vem em branco no Brudam), nao
+        # mais o local fisico de entrega (LOCAL ENTREGA), que as vezes e um
+        # parceiro de redespacho/cross-dock (ex.: "EXATA CARGO" em
+        # Guarulhos) diferente do cliente real, ate em outra cidade/UF.
+        # Pedido do cliente: LOCAL ENTREGA vira uma coluna separada
+        # "Redespacho" (so o nome), mostrada apenas quando preenchida.
+        eff_local = _primeiro_preenchido(r.get('DESTINO', ''), r['LOCAL ENTREGA'])
+        eff_cidade = _primeiro_preenchido(r.get('CIDADE DESTINO', ''), r['CIDADE ENTREGA'])
+        eff_uf = _primeiro_preenchido(r.get('UF DESTINO', ''), r['UF ENTREGA'])
+        redespacho = _primeiro_preenchido(r['LOCAL ENTREGA'], '')
         coord = CITY_COORD.get(f"{eff_cidade}|{eff_uf}") or UF_CENTROID.get(eff_uf)
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
@@ -231,6 +260,7 @@ def build_rows(df, hoje=None):
             'VOLUMES': int(r['VOLUMES']) if not pd.isna(r['VOLUMES']) else 0,
             'FRETE TOTAL': float(r['FRETE TOTAL']) if not pd.isna(r['FRETE TOTAL']) else 0.0,
             'NF VALOR': float(r['NF VALOR']) if not pd.isna(r['NF VALOR']) else 0.0,
+            'PESO': float(r['PESO CALC']) if not pd.isna(r['PESO CALC']) else 0.0,
             'TX. PEDAGIO': float(r['TX. PEDAGIO']) if not pd.isna(r['TX. PEDAGIO']) else 0.0,
             'VALOR ICMS': float(r['VALOR ICMS']) if not pd.isna(r['VALOR ICMS']) else 0.0,
             'TX. GRIS': float(r['TX. GRIS']) if not pd.isna(r['TX. GRIS']) else 0.0,
@@ -246,7 +276,8 @@ def build_rows(df, hoje=None):
             'DATA ENTREGA': iso(data_entrega),
             'PREV. ENTREGA': iso(prev_entrega),
             'DATA DE AGENDAMENTO': iso(data_agendamento),
-            'EFF_LOCAL': r['LOCAL ENTREGA'] if not pd.isna(r['LOCAL ENTREGA']) else '',
+            'EFF_LOCAL': eff_local,
+            'REDESPACHO': redespacho,
             'EFF_CIDADE': eff_cidade,
             'DESCRICAO_ULTIMO': descricao_ultimo,
             'OBSERVACOES': OBSERVACOES_TRANSITO.get(minuta, []),
@@ -338,6 +369,7 @@ def main():
             'destinatario': r['EFF_LOCAL'],
             'cidade': r['EFF_CIDADE'],
             'uf': r['EFF_UF'],
+            'redespacho': r['REDESPACHO'],
             'prazo': r['DATA DE AGENDAMENTO'] or r['PREV. ENTREGA'],
             'descricao': r['DESCRICAO_ULTIMO'],
         }
