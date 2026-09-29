@@ -161,22 +161,22 @@ def _fmt_nf_data(v):
 
 
 def _remover_duplicatas_obsoletas(df):
-    """Se uma NF aparece com Coletada='Cte Emitido' em alguma minuta,
-    remove QUALQUER outra ocorrencia dessa mesma NF com status diferente
-    (Cancelado ou NF Recebida e Nao Coletado) em outras minutas -- a nota
+    """Se uma NF aparece com Coletada='Coletado' em alguma minuta, remove
+    QUALQUER outra ocorrencia dessa mesma NF com status diferente (Nao
+    Coletado ou NF Recebida e Nao Coletado) em outras minutas -- a nota
     foi reprocessada/reemitida depois, entao a entrada antiga (cancelada
     ou ainda pendente) nao e mais relevante pro cliente ver, so a mais
-    recente (Cte Emitido) importa. NF/DOC pode ter varias notas numa
-    celula so (separadas por virgula), entao compara nota a nota."""
+    recente (Coletado) importa. NF/DOC pode ter varias notas numa celula
+    so (separadas por virgula), entao compara nota a nota."""
     def notas(cel):
         return [n.strip() for n in str(cel).split(",") if n.strip()]
 
     nfs_emitidas = set()
-    for cel in df.loc[df["Coletada"] == "Cte Emitido", "NF/DOC"]:
+    for cel in df.loc[df["Coletada"] == "Coletado", "NF/DOC"]:
         nfs_emitidas.update(notas(cel))
 
     def obsoleta(row):
-        if row["Coletada"] == "Cte Emitido":
+        if row["Coletada"] == "Coletado":
             return False
         return any(n in nfs_emitidas for n in notas(row["NF/DOC"]))
 
@@ -186,15 +186,15 @@ def _remover_duplicatas_obsoletas(df):
 
 def _mapear_coletada(status_cte):
     """Coluna derivada 'Coletada', a partir do STATUS CT-e:
-    Autorizado/Criado -> Cte Emitido; Cancelado -> Cancelado;
+    Autorizado/Criado -> Coletado; Cancelado -> Nao Coletado;
     em branco -> NF Recebida e Nao Coletado."""
     if pd.isna(status_cte) or not str(status_cte).strip():
         return "NF Recebida e Não Coletado"
     s = str(status_cte).strip().lower()
     if s.startswith("autorizado") or s.startswith("criado"):
-        return "Cte Emitido"
+        return "Coletado"
     if s.startswith("cancelado"):
-        return "Cancelado"
+        return "Não Coletado"
     return status_cte
 
 
