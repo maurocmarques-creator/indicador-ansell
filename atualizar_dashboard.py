@@ -8,6 +8,7 @@ Uso: python atualizar_dashboard.py <planilha.xlsx> [pasta_do_dashboard]
 Padrao pasta_do_dashboard: diretorio deste script.
 """
 
+import re
 import sys
 import json
 from datetime import datetime
@@ -161,6 +162,41 @@ def _primeiro_preenchido(*valores):
     return ''
 
 
+# Mesma lista/logica de normalizacao de nome usada no index.html (funcao
+# JS _normalizaDest, aba Resumo Destinatario) -- mantida em espelho aqui
+# porque o Python nao pode chamar o JS. Se adicionar um prefixo confirmado
+# num lado, adicionar no outro tambem.
+CONSOLIDACAO_PREFIXOS_CONFIRMADOS = [
+    'NORTEL', 'ATIVA', 'BALASKA', 'BUNZL', 'CORSUL', 'DIMENSIONAL',
+    'ELETRONOR', 'EXATA', 'FASTENAL', 'FEMABRA', 'FRISA', 'IR NEUTZLING',
+    'ITURRI', 'KROMBERG', 'PETROLEO BRASILEIRO', 'RSG', 'WILSON SONS',
+]
+
+
+def _normaliza_nome(nome):
+    """Normaliza um nome de destinatario pra comparacao: maiusculas, remove
+    pontuacao e sufixo societario (LTDA, SA, EPP, ME, EIRELI, MEI) do
+    final, e reduz a um prefixo confirmado manualmente quando aplicavel
+    (ex.: "CORSUL COMERCIO E REPRESENTACOES DO SUL LTDA" e "CORSUL
+    COMERCIO E REPRESENTACOES" viram ambos "CORSUL")."""
+    n = re.sub(r'\s+', ' ', str(nome or '').upper()).strip()
+    n = re.sub(r'\bS/A\b', 'SA', n)
+    n = re.sub(r'\bS\.A\.?\b', 'SA', n)
+    n = re.sub(r'\bS\s+A\b', 'SA', n)
+    n = re.sub(r'[.\-]', ' ', n)
+    n = re.sub(r'\s+', ' ', n).strip()
+    sufixo_re = re.compile(r'\s(LTDA|SA|EPP|ME|EIRELI|MEI)$')
+    while True:
+        nova = sufixo_re.sub('', n).strip()
+        if nova == n:
+            break
+        n = nova
+    for prefixo in CONSOLIDACAO_PREFIXOS_CONFIRMADOS:
+        if n == prefixo or n.startswith(prefixo + ' '):
+            return prefixo
+    return n
+
+
 def compute_status(tipo_emissao, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo=''):
     if tipo_emissao == 'DEVOLUCAO':
         return 'DEVOLUCAO'
@@ -240,10 +276,15 @@ def build_rows(df, hoje=None):
         eff_cidade = _primeiro_preenchido(r.get('CIDADE DESTINO', ''), r['CIDADE ENTREGA'])
         eff_uf = _primeiro_preenchido(r.get('UF DESTINO', ''), r['UF ENTREGA'])
         redespacho = _primeiro_preenchido(r['LOCAL ENTREGA'], '')
-        # Se o local de entrega e igual ao destinatario, nao e redespacho
-        # de verdade (so duplicou o mesmo nome nos dois campos) -- nesse
-        # caso o valido e o destinatario, entao deixa em branco.
-        if redespacho.strip().upper() == str(eff_local).strip().upper():
+        # Se o local de entrega e o destinatario sao a mesma empresa, nao
+        # e redespacho de verdade -- so o mesmo nome escrito diferente
+        # (sufixo societario, "DO SUL" a mais etc.). Nesse caso o valido
+        # e o destinatario, entao deixa em branco. Usa a mesma
+        # normalizacao (com sufixo + prefixos confirmados) da consolidacao
+        # do Resumo Destinatario, senao comparacoes como "CORSUL COMERCIO
+        # E REPRESENTACOES DO SUL LTDA" x "CORSUL COMERCIO E
+        # REPRESENTACOES" nao batem no texto puro.
+        if redespacho and _normaliza_nome(redespacho) == _normaliza_nome(eff_local):
             redespacho = ''
         coord = CITY_COORD.get(f"{eff_cidade}|{eff_uf}") or UF_CENTROID.get(eff_uf)
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
