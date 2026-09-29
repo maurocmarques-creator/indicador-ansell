@@ -310,6 +310,31 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
             nf_status.append(item)
 
         log(f"Status NF extraido ({len(nf_status)} linhas principais, {n_historico} no historico).")
+
+        # nf_pendente.json -- minutas com NF ainda nao coletada (Nao
+        # Coletado ou NF Recebida e Nao Coletado), publicada solta no
+        # repo pro Mural mostrar tambem (nao so as em transito -- uma
+        # minuta ja entregue pode ter NF pendente/cancelada). Escrito
+        # aqui direto (nao passa pelo bloco NF_STATUS do index.html),
+        # a rotina agendada do Mural le esse arquivo e sincroniza pro
+        # banco do Mural.
+        nf_pendente = [
+            {
+                "minuta": item["minuta"],
+                "cliente": item["cliente"],
+                "cte": item["cte"],
+                "nf": item["nf"],
+                "status_cte": item["status_cte"],
+                "coletada": item["coletada"],
+                "data_recebimento": item["data_recebimento"],
+            }
+            for item in nf_status
+            if item["coletada"] != "Coletado"
+        ]
+        nf_pendente_path = REPO_DIR / "nf_pendente.json"
+        nf_pendente_path.write_text(json.dumps(nf_pendente, ensure_ascii=False), encoding="utf-8")
+        log(f"nf_pendente.json atualizado ({len(nf_pendente)} minutas com NF nao coletada).")
+
         return nf_status
     except Exception:
         import traceback
@@ -410,18 +435,18 @@ def commit_e_push(dados_mudaram: bool):
     limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
     status = subprocess.run(
-        ["git", "status", "--porcelain", "index.html", "em_transito.json"],
+        ["git", "status", "--porcelain", "index.html", "em_transito.json", "nf_pendente.json"],
         cwd=REPO_DIR, capture_output=True, text=True,
     )
-    log(f"git status --porcelain index.html em_transito.json -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
+    log(f"git status --porcelain index.html em_transito.json nf_pendente.json -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
     if status.returncode != 0:
         log("git status falhou -- abortando commit desta rodada.")
         return
     if not status.stdout.strip():
-        log("Nada para commitar (index.html e em_transito.json identicos ao publicado).")
+        log("Nada para commitar (index.html, em_transito.json e nf_pendente.json identicos ao publicado).")
         return
 
-    subprocess.run(["git", "add", "index.html", "em_transito.json"], cwd=REPO_DIR, check=True)
+    subprocess.run(["git", "add", "index.html", "em_transito.json", "nf_pendente.json"], cwd=REPO_DIR, check=True)
     sufixo = "com dados novos" if dados_mudaram else "sem dados novos, so verificacao"
     mensagem = f"Atualizacao automatica ({sufixo}) — {date.today().isoformat()}"
     subprocess.run(["git", "commit", "-m", mensagem], cwd=REPO_DIR, check=True)
