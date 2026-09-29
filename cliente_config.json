@@ -474,6 +474,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 14:43"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, agendada para 02/10 através do ID 19964.",
+        "data": "29/09/2026 13:18"
       }
     ],
     "300304": [
@@ -481,6 +486,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 15:04"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell. Processo de devolução em andamento, com previsão de conclusão até 08/10.",
+        "data": "29/09/2026 13:19"
       }
     ],
     "300452": [
@@ -500,6 +510,11 @@
         "autor": "PortoEx",
         "texto": "Devolução autorizada pela Ansell. Processo de devolução em andamento.",
         "data": "23/09/2026 09:22"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "devolução agendada para 01/10. ID 19963",
+        "data": "29/09/2026 13:21"
       }
     ],
     "300544": [
@@ -543,6 +558,11 @@
         "autor": "PortoEx",
         "texto": "Efetuando buscas pelo material.",
         "data": "23/09/2026 15:06"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Em buscas pela mercadoria até 02/10. Caso não seja localizada, será aberto processo de extravio.",
+        "data": "29/09/2026 13:26"
       }
     ],
     "300730": [
@@ -557,6 +577,18 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "23/09/2026 15:12"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell. agendada na Wilson Sons p/ 01/10 (ID 19963)",
+        "data": "29/09/2026 13:30"
+      }
+    ],
+    "301139": [
+      {
+        "autor": "PortoEx",
+        "texto": "NF retida base FOR,  sinalizada em 21/09. Aguardando retorno do cliente com o comprovante de pagamento.",
+        "data": "29/09/2026 13:31"
       }
     ],
     "301182": [
@@ -583,6 +615,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando retorno da Ansell com o agendamento prévio para seguirmos com a nova programação.",
         "data": "23/09/2026 15:18"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell. devolução na Wilson Sons em 02/10 (ID 19964).",
+        "data": "29/09/2026 13:36"
       }
     ],
     "301395": [
@@ -590,6 +627,32 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
         "data": "24/09/2026 14:14"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "29/09/2026 13:43"
+      }
+    ],
+    "301566": [
+      {
+        "autor": "PortoEx",
+        "texto": "devolução autorizada pela ansell. Devolução prevista até 08/10, ID a confirmar.",
+        "data": "29/09/2026 13:44"
+      }
+    ],
+    "301639": [
+      {
+        "autor": "PortoEx",
+        "texto": "devolução autorizada pela ansell. agendado para dia 02/10 através do ID 19964",
+        "data": "29/09/2026 14:20"
+      }
+    ],
+    "301755": [
+      {
+        "autor": "PortoEx",
+        "texto": "aguardando cliente informar data para recebimento.",
+        "data": "29/09/2026 13:47"
       }
     ],
     "301910": [
@@ -597,6 +660,13 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação da data de agendamento pelo cliente.",
         "data": "23/09/2026 15:58"
+      }
+    ],
+    "301953": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para seguirmos com a devolução da mercadoria ou outra tratativa.",
+        "data": "29/09/2026 14:21"
       }
     ],
     "302089": [
