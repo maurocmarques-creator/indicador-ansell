@@ -251,6 +251,12 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 "status_cte": str(r["STATUS CT-e"]),
                 "nf": str(r["NF/DOC"]),
                 "nf_data": _fmt_nf_data(r["NF DATA"]),
+                # 'DATA EMISSAO' aqui e a data de emissao da MINUTA no
+                # Brudam -- na pratica, quando a PortoEx recebeu/registrou
+                # o documento, que pode ser bem depois da propria emissao
+                # da NF (nf_data) pelo cliente. Mostrado como "Data
+                # Recebimento" pro cliente nao confundir com nf_data.
+                "data_recebimento": _fmt_nf_data(r.get("DATA EMISSAO", "")),
                 "cliente": str(r["CLIENTE"]),
                 # Campos do relatorio adicionados depois (destinatario e
                 # local de entrega) -- .get com default, pra nao quebrar
