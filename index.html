@@ -74,6 +74,7 @@ tr:last-child td{border-bottom:none}
 .exp-diff-pos{color:#16a34a;font-weight:700}
 .exp-diff-neg{color:#e8341c;font-weight:700}
 @media(max-width:768px){.kpi-row{grid-template-columns:1fr 1fr}.charts-grid{grid-template-columns:1fr}.charts-grid.triple{grid-template-columns:1fr}}
+#map-fs-wrap.map-fs-active{position:fixed;top:0;left:0;right:0;bottom:0;z-index:4000;background:#fff;padding:16px;overflow:auto}
 </style>
 </head>
 <body>
@@ -439,9 +440,18 @@ tr:last-child td{border-bottom:none}
     <p style="font-size:.8rem;color:#64748b;margin-bottom:12px">
       Tamanho da bolinha proporcional ao volume de carga. Passe o mouse para ver detalhes. Aplica os filtros ativos.
     </p>
-    <div id="map-breadcrumb" style="margin-bottom:8px;font-size:.82rem;min-height:20px"></div>
-    <div id="map-container" style="height:580px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
-    <div id="map-legend" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.75rem"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <label for="map-uf-select" style="font-size:.78rem;color:var(--gray);font-weight:600">Estado no mapa</label>
+      <select id="map-uf-select" style="font-size:.8rem;padding:5px 8px;border:1px solid var(--border);border-radius:6px;color:#1e293b;background:#fff">
+        <option value="">Brasil (todos)</option>
+      </select>
+      <button id="map-fullscreen-btn" type="button" style="border:1px solid var(--border);background:#fff;border-radius:6px;padding:5px 10px;font-size:.78rem;font-weight:600;cursor:pointer;color:#1a3a5c">⛶ Tela cheia</button>
+    </div>
+    <div id="map-fs-wrap" style="background:#fff">
+      <div id="map-breadcrumb" style="margin-bottom:8px;font-size:.82rem;min-height:20px"></div>
+      <div id="map-container" style="height:580px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
+      <div id="map-legend" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.75rem"></div>
+    </div>
   </div>
 </div>
 
@@ -2076,7 +2086,44 @@ const STATE_POLYS = [
 
 let _mapTooltip = null;
 let _mapaZoomUf = null; // null = Brasil inteiro; 'SP' etc. = zoom num estado
+let _mapFullscreen = false; // modo "tela cheia" (overlay via CSS, nao a Fullscreen API do navegador)
 let TRANSITO_EXPORT = { fora: [], dentro: [] };
+
+// "Tela cheia" e um overlay (position:fixed cobrindo a tela) em vez da
+// Fullscreen API do navegador -- mais simples e funciona em qualquer
+// contexto, sem depender de permissao do navegador/embutido.
+function _mapToggleFullscreen() {
+  _mapFullscreen = !_mapFullscreen;
+  const wrap = document.getElementById('map-fs-wrap');
+  if (wrap) wrap.classList.toggle('map-fs-active', _mapFullscreen);
+  document.body.style.overflow = _mapFullscreen ? 'hidden' : '';
+  const btn = document.getElementById('map-fullscreen-btn');
+  if (btn) btn.textContent = _mapFullscreen ? '✕ Sair da tela cheia' : '⛶ Tela cheia';
+  renderMapa();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && _mapFullscreen) _mapToggleFullscreen();
+});
+
+// Filtro "Estado no mapa" (setup unico, o elemento e estatico no HTML,
+// nao recriado a cada renderMapa()).
+(function _mapSetupControls() {
+  const sel = document.getElementById('map-uf-select');
+  if (sel) {
+    Object.keys(STATE_NAMES).sort((a, b) => STATE_NAMES[a].localeCompare(STATE_NAMES[b], 'pt-BR')).forEach(uf => {
+      const opt = document.createElement('option');
+      opt.value = uf;
+      opt.textContent = STATE_NAMES[uf];
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+      _mapaZoomUf = sel.value || null;
+      renderMapa();
+    });
+  }
+  const fsBtn = document.getElementById('map-fullscreen-btn');
+  if (fsBtn) fsBtn.addEventListener('click', () => _mapToggleFullscreen());
+})();
 
 // bbox [lngMin,lngMax,latMin,latMax] a partir de uma lista de pontos [lng,lat]
 function _polysBBox(pts) {
@@ -2139,8 +2186,11 @@ async function renderMapa() {
   const maxVol = Math.max(...cities.map(c => c.volumes), 1);
 
   const container = document.getElementById('map-container');
+  // Tela cheia: aproveita a altura toda da tela. Com zoom (sem tela cheia),
+  // ja aumenta um pouco a altura padrao pra dar mais espaco as cidades.
+  const H = _mapFullscreen ? Math.max(window.innerHeight - 110, 500) : (_mapaZoomUf ? 680 : 580);
+  container.style.height = H + 'px';
   const W = Math.max(container.clientWidth || 900, 640);
-  const H = 580;
   const PAD = 28;
   // Limites do Brasil inteiro por padrao; com zoom, usa o bbox do
   // estado (a partir dos poligonos hardcoded, que sempre existem --
@@ -2307,13 +2357,23 @@ async function renderMapa() {
     });
   });
 
-  // Breadcrumb / botao de voltar
+  // Breadcrumb / botao de voltar. Em tela cheia, o filtro/botao da barra
+  // de cima ficam cobertos pelo overlay -- por isso o botao de sair
+  // tambem aparece aqui dentro, que continua visivel nesse modo.
   const breadcrumb = document.getElementById('map-breadcrumb');
   if (breadcrumb) {
-    breadcrumb.innerHTML = _mapaZoomUf
+    const sairBtn = _mapFullscreen
+      ? `<button onclick="_mapToggleFullscreen()" style="border:1px solid var(--border);background:#fff;border-radius:6px;padding:4px 10px;font-size:.78rem;font-weight:600;cursor:pointer;color:#1a3a5c;margin-left:8px">✕ Sair da tela cheia (Esc)</button>`
+      : '';
+    breadcrumb.innerHTML = (_mapaZoomUf
       ? `<button onclick="_mapaZoomUf=null;renderMapa()" style="border:1px solid var(--border);background:#fff;border-radius:6px;padding:4px 10px;font-size:.78rem;font-weight:600;cursor:pointer;color:#1a3a5c">◀ Voltar ao Brasil</button> <span style="color:#64748b;margin-left:8px">Mostrando: <b>${STATE_NAMES[_mapaZoomUf]||_mapaZoomUf}</b> (${cities.length} cidade${cities.length===1?'':'s'})</span>`
-      : `<span style="color:#64748b">Clique num estado no mapa pra ver as cidades de perto.</span>`;
+      : `<span style="color:#64748b">Clique num estado no mapa, ou escolha no filtro "Estado no mapa" acima, pra ver as cidades de perto (dica: use "Tela cheia" pra dar mais espaço).</span>`) + sairBtn;
   }
+
+  // Mantem o filtro "Estado no mapa" sincronizado (clique direto no mapa
+  // ou o botao "Voltar ao Brasil" tambem devem refletir no select).
+  const ufSel = document.getElementById('map-uf-select');
+  if (ufSel && ufSel.value !== (_mapaZoomUf || '')) ufSel.value = _mapaZoomUf || '';
 
   // Tooltip setup
   if (!_mapTooltip) {
