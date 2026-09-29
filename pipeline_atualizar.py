@@ -149,15 +149,46 @@ def _extrair_nfs_cliente(page, cliente, data_ini, data_fim, pasta_saida: Path) -
 
 
 def _fmt_nf_data(v):
-    """'NF DATA' vem como Timestamp (ou vazio) do Excel -- normaliza pra
+    """'NF DATA' normalmente vem como Timestamp do Excel, mas quando a
+    celula tinha varias notas (ver _expandir_notas_multiplas) o valor ja
+    chega como string 'DD/MM/AAAA' apos o split -- nesse caso o parse
+    tem que ser explicitamente dia-primeiro (dayfirst), senao o pandas
+    pode interpretar errado (ex.: confundir dia com mes). Normaliza pra
     ISO 'AAAA-MM-DD' (mesmo padrao de data usado no resto do dashboard),
     ou string vazia se nao tiver data."""
     if v is None or v == "" or (isinstance(v, float) and pd.isna(v)):
         return ""
     try:
+        if isinstance(v, str):
+            return pd.to_datetime(v, dayfirst=True).strftime("%Y-%m-%d")
         return pd.Timestamp(v).strftime("%Y-%m-%d")
     except (ValueError, TypeError):
         return ""
+
+
+def _expandir_notas_multiplas(df):
+    """Quando NF/DOC tem mais de uma nota na mesma celula (separadas por
+    virgula, com NF DATA tambem separada por virgula, uma pra cada NF
+    na mesma posicao), quebra em uma linha por nota -- cada uma com seu
+    proprio numero e sua propria data de emissao, em vez de uma linha
+    so misturando tudo (o que fazia a Data NF nao bater com a nota
+    certa e a data ficar em branco por nao dar pra parsear a string com
+    virgulas). As demais colunas (minuta, CT-e, status, cliente,
+    destino etc.) se repetem em todas as linhas geradas, ja que e a
+    mesma minuta/CT-e -- so a NF e a data mudam."""
+    linhas = []
+    for _, r in df.iterrows():
+        nfs = [n.strip() for n in str(r["NF/DOC"]).split(",") if n.strip()]
+        datas = [d.strip() for d in str(r["NF DATA"]).split(",")]
+        if len(nfs) <= 1 or len(nfs) != len(datas):
+            linhas.append(r)
+            continue
+        for nf, data in zip(nfs, datas):
+            nova = r.copy()
+            nova["NF/DOC"] = nf
+            nova["NF DATA"] = data
+            linhas.append(nova)
+    return pd.DataFrame(linhas).reset_index(drop=True)
 
 
 def _separar_historico_nf(df):
@@ -260,6 +291,10 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
         consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
         log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
         consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
+        antes_expandir = len(consolidado)
+        consolidado = _expandir_notas_multiplas(consolidado)
+        if len(consolidado) != antes_expandir:
+            log(f"Linhas com varias NFs na mesma celula expandidas: {antes_expandir} -> {len(consolidado)} linhas.")
         consolidado, historico_por_posicao, n_historico = _separar_historico_nf(consolidado)
         log(f"Entradas movidas pro historico (NF cancelada/pendente reemitida em outra minuta, nao conta mais nos KPIs): {n_historico}.")
 
