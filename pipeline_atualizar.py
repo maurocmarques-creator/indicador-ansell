@@ -148,6 +148,18 @@ def _extrair_nfs_cliente(page, cliente, data_ini, data_fim, pasta_saida: Path) -
     return destino
 
 
+def _fmt_nf_data(v):
+    """'NF DATA' vem como Timestamp (ou vazio) do Excel -- normaliza pra
+    ISO 'AAAA-MM-DD' (mesmo padrao de data usado no resto do dashboard),
+    ou string vazia se nao tiver data."""
+    if v is None or v == "" or (isinstance(v, float) and pd.isna(v)):
+        return ""
+    try:
+        return pd.Timestamp(v).strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return ""
+
+
 def _mapear_coletada(status_cte):
     """Coluna derivada 'Coletada', a partir do STATUS CT-e:
     Autorizado/Criado -> Cte Emitido; Cancelado -> Cancelado;
@@ -213,6 +225,7 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 "cte": str(r["CTE"]),
                 "status_cte": str(r["STATUS CT-e"]),
                 "nf": str(r["NF/DOC"]),
+                "nf_data": _fmt_nf_data(r["NF DATA"]),
                 "cliente": str(r["CLIENTE"]),
                 "coletada": str(r["Coletada"]),
             }
