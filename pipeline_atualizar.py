@@ -160,6 +160,29 @@ def _fmt_nf_data(v):
         return ""
 
 
+def _remover_cancelados_reemitidos(df):
+    """Se uma NF aparece com Coletada='Cte Emitido' em alguma minuta,
+    remove ocorrencias 'Cancelado' dessa mesma NF em outras minutas -- a
+    nota foi reemitida por outro CT-e depois do cancelamento, entao o
+    cancelamento antigo nao e mais relevante pro cliente ver. NF/DOC pode
+    ter varias notas numa celula so (separadas por virgula), entao
+    compara nota a nota."""
+    def notas(cel):
+        return [n.strip() for n in str(cel).split(",") if n.strip()]
+
+    nfs_emitidas = set()
+    for cel in df.loc[df["Coletada"] == "Cte Emitido", "NF/DOC"]:
+        nfs_emitidas.update(notas(cel))
+
+    def reemitido(row):
+        if row["Coletada"] != "Cancelado":
+            return False
+        return any(n in nfs_emitidas for n in notas(row["NF/DOC"]))
+
+    mascara = df.apply(reemitido, axis=1)
+    return df[~mascara], int(mascara.sum())
+
+
 def _mapear_coletada(status_cte):
     """Coluna derivada 'Coletada', a partir do STATUS CT-e:
     Autorizado/Criado -> Cte Emitido; Cancelado -> Cancelado;
@@ -207,6 +230,8 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
         consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
         log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
         consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
+        consolidado, n_reemitidos = _remover_cancelados_reemitidos(consolidado)
+        log(f"Cancelados removidos por NF reemitida em outra minuta: {n_reemitidos}.")
 
         # Guarda tambem os xlsx (bruto + consolidado) na pasta do cliente no
         # OneDrive, pro Mauro poder abrir/conferir manualmente quando quiser
