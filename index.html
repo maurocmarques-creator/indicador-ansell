@@ -97,16 +97,16 @@ tr:last-child td{border-bottom:none}
   </div>
 </header>
 <div class="tabs">
-  <div class="tab active" onclick="showTab('totais')">Totais</div>
-  <div class="tab" onclick="showTab('totais-cx')">Totais por CX</div>
-  <div class="tab" onclick="showTab('performance')">Performance</div>
-  <div class="tab" onclick="showTab('perf-dest')">Perf. Destinatário</div>
-  <div class="tab" onclick="showTab('barra-perf')">Barra Performance</div>
-  <div class="tab" onclick="showTab('transito')">🚚 Em Trânsito</div>
-  <div class="tab" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
-  <div class="tab" onclick="showTab('statusnf')">📄 Status NF</div>
-  <div class="tab" onclick="showTab('expectativa')">📊 Expectativa</div>
-  <div class="tab" onclick="showTab('mapa')">🗺 Mapa</div>
+  <div class="tab active" data-tab="totais" onclick="showTab('totais')">Totais</div>
+  <div class="tab" data-tab="totais-cx" onclick="showTab('totais-cx')">Totais por CX</div>
+  <div class="tab" data-tab="performance" onclick="showTab('performance')">Performance</div>
+  <div class="tab" data-tab="perf-dest" onclick="showTab('perf-dest')">Perf. Destinatário</div>
+  <div class="tab" data-tab="barra-perf" onclick="showTab('barra-perf')">Barra Performance</div>
+  <div class="tab" data-tab="transito" onclick="showTab('transito')">🚚 Em Trânsito</div>
+  <div class="tab" data-tab="antecipadas" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
+  <div class="tab" data-tab="statusnf" onclick="showTab('statusnf')">📄 Status NF</div>
+  <div class="tab" data-tab="expectativa" onclick="showTab('expectativa')">📊 Expectativa</div>
+  <div class="tab" data-tab="mapa" onclick="showTab('mapa')">🗺 Mapa</div>
   <div style="position:relative;margin-left:auto;display:flex;align-items:center;gap:2px">
     <button id="btn-atualizar-agora" class="tab" type="button" style="border:0;background:transparent;cursor:pointer;font:inherit" title="Dispara a extração do portal agora, sem esperar o próximo horário programado (06h/12h/18h/23h59)">🔄 Atualizar Agora</button>
     <button id="btn-gear-atualizar" type="button" title="Configurar token de atualização" style="border:0;background:transparent;color:rgba(255,255,255,.65);cursor:pointer;padding:4px 8px;font-size:.9rem">⚙</button>
@@ -809,8 +809,18 @@ function init() {
     : '';
   const _atualizado = RAW.meta.gerado_em ? ' | Atualizado em ' + RAW.meta.gerado_em : '';
   document.getElementById('periodo-badge').textContent = _badge + ' | ' + allRows.length.toLocaleString('pt-BR') + ' registros' + _atualizado;
-  
+
   applyFilters();
+
+  // Restaura a aba que estava aberta antes de recarregar/atualizar a
+  // pagina (guardada no # da URL por showTab). Sem isso, toda vez que
+  // a pagina recarrega (ex.: botao "Atualizar pagina" do aviso de
+  // sincronizacao) ela volta pra "Totais", mesmo que o operador
+  // estivesse em outra aba.
+  const abaSalva = location.hash.replace('#','');
+  if (abaSalva && document.querySelector('.tab[data-tab="'+abaSalva+'"]')) {
+    showTab(abaSalva);
+  }
 }
 
 function applyFilters() {
@@ -2290,10 +2300,13 @@ async function renderMapa() {
 
 // --- TAB SWITCH ---
 function showTab(id) {
+  const btn = document.querySelector('.tab[data-tab="'+id+'"]');
+  const conteudo = document.getElementById('tab-'+id);
+  if (!btn || !conteudo) return; // hash invalido/antigo -- ignora, fica na aba atual
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
-  event.target.classList.add('active');
-  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  conteudo.classList.add('active');
   // Hide global filters on tabs that have their own filter row (nao usam Ano/Mes/etc.)
   document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf') ? 'none' : 'flex';
   if (id === 'mapa') renderMapa();
@@ -2301,6 +2314,10 @@ function showTab(id) {
   if (id === 'transito') renderTransito();
   if (id === 'antecipadas') renderAntecipadas();
   if (id === 'statusnf') renderStatusNF();
+  // Guarda a aba atual no # da URL, sem recarregar a pagina -- assim, ao
+  // atualizar (F5) ou reabrir o link, volta pra mesma aba em vez de ir
+  // sempre pra "Totais". Nao muda nada no servidor/hospedagem.
+  if (location.hash !== '#'+id) history.replaceState(null, '', '#'+id);
 }
 
 // Start
