@@ -160,13 +160,14 @@ def _fmt_nf_data(v):
         return ""
 
 
-def _remover_cancelados_reemitidos(df):
+def _remover_duplicatas_obsoletas(df):
     """Se uma NF aparece com Coletada='Cte Emitido' em alguma minuta,
-    remove ocorrencias 'Cancelado' dessa mesma NF em outras minutas -- a
-    nota foi reemitida por outro CT-e depois do cancelamento, entao o
-    cancelamento antigo nao e mais relevante pro cliente ver. NF/DOC pode
-    ter varias notas numa celula so (separadas por virgula), entao
-    compara nota a nota."""
+    remove QUALQUER outra ocorrencia dessa mesma NF com status diferente
+    (Cancelado ou NF Recebida e Nao Coletado) em outras minutas -- a nota
+    foi reprocessada/reemitida depois, entao a entrada antiga (cancelada
+    ou ainda pendente) nao e mais relevante pro cliente ver, so a mais
+    recente (Cte Emitido) importa. NF/DOC pode ter varias notas numa
+    celula so (separadas por virgula), entao compara nota a nota."""
     def notas(cel):
         return [n.strip() for n in str(cel).split(",") if n.strip()]
 
@@ -174,12 +175,12 @@ def _remover_cancelados_reemitidos(df):
     for cel in df.loc[df["Coletada"] == "Cte Emitido", "NF/DOC"]:
         nfs_emitidas.update(notas(cel))
 
-    def reemitido(row):
-        if row["Coletada"] != "Cancelado":
+    def obsoleta(row):
+        if row["Coletada"] == "Cte Emitido":
             return False
         return any(n in nfs_emitidas for n in notas(row["NF/DOC"]))
 
-    mascara = df.apply(reemitido, axis=1)
+    mascara = df.apply(obsoleta, axis=1)
     return df[~mascara], int(mascara.sum())
 
 
@@ -230,8 +231,8 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
         consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
         log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
         consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
-        consolidado, n_reemitidos = _remover_cancelados_reemitidos(consolidado)
-        log(f"Cancelados removidos por NF reemitida em outra minuta: {n_reemitidos}.")
+        consolidado, n_obsoletas = _remover_duplicatas_obsoletas(consolidado)
+        log(f"Entradas obsoletas removidas (NF reemitida em outra minuta): {n_obsoletas}.")
 
         # Guarda tambem os xlsx (bruto + consolidado) na pasta do cliente no
         # OneDrive, pro Mauro poder abrir/conferir manualmente quando quiser
