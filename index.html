@@ -439,6 +439,7 @@ tr:last-child td{border-bottom:none}
     <p style="font-size:.8rem;color:#64748b;margin-bottom:12px">
       Tamanho da bolinha proporcional ao volume de carga. Passe o mouse para ver detalhes. Aplica os filtros ativos.
     </p>
+    <div id="map-breadcrumb" style="margin-bottom:8px;font-size:.82rem;min-height:20px"></div>
     <div id="map-container" style="height:580px;border-radius:10px;overflow:hidden;border:1px solid var(--border)"></div>
     <div id="map-legend" style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.75rem"></div>
   </div>
@@ -2074,7 +2075,14 @@ const STATE_POLYS = [
 ];
 
 let _mapTooltip = null;
+let _mapaZoomUf = null; // null = Brasil inteiro; 'SP' etc. = zoom num estado
 let TRANSITO_EXPORT = { fora: [], dentro: [] };
+
+// bbox [lngMin,lngMax,latMin,latMax] a partir de uma lista de pontos [lng,lat]
+function _polysBBox(pts) {
+  const lngs = pts.map(p=>p[0]), lats = pts.map(p=>p[1]);
+  return { lngMin: Math.min(...lngs), lngMax: Math.max(...lngs), latMin: Math.min(...lats), latMax: Math.max(...lats) };
+}
 
 // Helper: compute polygon centroid from GeoJSON geometry
 function _geoCentroid(geom) {
@@ -2123,18 +2131,37 @@ async function renderMapa() {
     else cityAgg[key].tr++;
   });
 
-  const cities = Object.values(cityAgg).sort((a,b) => b.volumes - a.volumes);
+  const todasCidades = Object.values(cityAgg).sort((a,b) => b.volumes - a.volumes);
+  // Com zoom ativo, so as cidades daquele estado -- e a escala relativa
+  // da bolinha (maxVol) tambem so entre elas, senao uma cidade grande
+  // de outro estado deixaria tudo minusculo.
+  const cities = _mapaZoomUf ? todasCidades.filter(c => c.uf === _mapaZoomUf) : todasCidades;
   const maxVol = Math.max(...cities.map(c => c.volumes), 1);
 
   const container = document.getElementById('map-container');
   const W = Math.max(container.clientWidth || 900, 640);
   const H = 580;
   const PAD = 28;
-  const LNG_MIN = -74.0, LNG_MAX = -28.5;
-  const LAT_MAX = 5.7;
-  const COS_LAT = Math.cos(-14 * Math.PI / 180);
+  // Limites do Brasil inteiro por padrao; com zoom, usa o bbox do
+  // estado (a partir dos poligonos hardcoded, que sempre existem --
+  // nao depende do fetch do IBGE ter funcionado) com uma margem.
+  let LNG_MIN = -74.0, LNG_MAX = -28.5, LAT_MAX = 5.7, LAT_MIN = -34.2;
+  if (_mapaZoomUf) {
+    const estadoPoly = STATE_POLYS.find(s => s.id === _mapaZoomUf);
+    if (estadoPoly) {
+      const bbox = _polysBBox(estadoPoly.pts);
+      const padLng = (bbox.lngMax - bbox.lngMin) * 0.12 + 0.2;
+      const padLat = (bbox.latMax - bbox.latMin) * 0.12 + 0.2;
+      LNG_MIN = bbox.lngMin - padLng; LNG_MAX = bbox.lngMax + padLng;
+      LAT_MIN = bbox.latMin - padLat; LAT_MAX = bbox.latMax + padLat;
+    }
+  }
+  // Latitude central da area visivel (nao sempre -14, que so fazia
+  // sentido pro Brasil inteiro) -- senao o mapa distorce feio quando
+  // da zoom num estado bem ao norte ou ao sul.
+  const COS_LAT = Math.cos((LAT_MIN+LAT_MAX)/2 * Math.PI / 180);
   const lngSpan = (LNG_MAX - LNG_MIN) * COS_LAT;
-  const latSpan = LAT_MAX - (-34.2);
+  const latSpan = LAT_MAX - LAT_MIN;
   const avW = W - 2*PAD, avH = H - 2*PAD;
   const scaleByH = avH * lngSpan / latSpan;
   const mapW = Math.min(scaleByH, avW);
@@ -2177,10 +2204,11 @@ async function renderMapa() {
         geo.features.forEach(f => {
           const cod = String(f.properties && (f.properties.codarea || f.properties.CD_GEOCUF || '') || '');
           const uf = IBGE_TO_UF[cod] || '';
+          if (_mapaZoomUf && uf !== _mapaZoomUf) return; // com zoom, desenha so o estado ativo
           const color = STATE_COLORS[uf] || '#d5e8d0';
           const d = _geoToPath(f.geometry, px);
           statesSVG += `<path d="${d}" fill="${color}" stroke="#5a8a65" stroke-width="0.7" stroke-linejoin="round" stroke-opacity="0.8" data-uf="${uf}"/>`;
-          if (uf) {
+          if (uf && !_mapaZoomUf) {
             const [lng, lat] = _geoCentroid(f.geometry);
             const [cx, cy] = px(lng, lat);
             const small = ['DF','SE','AL','RJ','ES','RN','PB'].includes(uf);
@@ -2197,11 +2225,12 @@ async function renderMapa() {
 
   if (!geoOK) {
     // Fallback to improved hardcoded polygons
-    statesSVG = STATE_POLYS.map(s => {
+    const polysVisiveis = _mapaZoomUf ? STATE_POLYS.filter(s => s.id === _mapaZoomUf) : STATE_POLYS;
+    statesSVG = polysVisiveis.map(s => {
       const d = pts2path(s.pts);
       return `<path d="${d}" fill="${s.c}" stroke="#5a8a65" stroke-width="0.8" stroke-linejoin="round" stroke-opacity="0.85" data-uf="${s.id}"/>`;
     }).join('');
-    stateLabels = STATE_POLYS.map(s => {
+    stateLabels = _mapaZoomUf ? '' : polysVisiveis.map(s => {
       const [x, y] = px(s.lbl[0], s.lbl[1]);
       const small = ['DF','SE','AL','RJ','ES','RN','PB'].includes(s.id);
       const tiny = ['DF','SE','AL'].includes(s.id);
@@ -2222,22 +2251,22 @@ async function renderMapa() {
     return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" fill-opacity="0.82" stroke="#fff" stroke-width="1.2" class="map-bubble" data-tip="${tip}" data-r="${r}" style="cursor:pointer"/>`;
   }).join('');
 
-  // Top city labels
-  const labelsTop = cities.slice(0, 12).map(c => {
+  // Top city labels (mais nomes visiveis quando da zoom, ja que sobra espaco)
+  const labelsTop = cities.slice(0, _mapaZoomUf ? 60 : 12).map(c => {
     const [cx, cy] = px(c.lng, c.lat);
     const r = 4 + Math.sqrt(c.volumes / maxVol) * 28;
     const ly = (parseFloat(cy) - r - 4).toFixed(1);
     return `<text x="${cx}" y="${ly}" text-anchor="middle" font-size="8.5" fill="#0f172a" font-family="Segoe UI,sans-serif" font-weight="700" pointer-events="none" paint-order="stroke" stroke="rgba(220,235,220,0.95)" stroke-width="3">${c.cidade}</text>`;
   }).join('');
 
-  // Grid lines
+  // Grid lines (so faz sentido na escala do Brasil inteiro; some no zoom)
   let gridLines = '';
-  for (let lat = -30; lat <= 5; lat += 10) {
+  if (!_mapaZoomUf) for (let lat = -30; lat <= 5; lat += 10) {
     const [,y] = px(LNG_MIN, lat);
     gridLines += `<line x1="${offX.toFixed(1)}" y1="${y}" x2="${(offX+mapW).toFixed(1)}" y2="${y}" stroke="#7ab0cc" stroke-width="0.4" opacity="0.25" stroke-dasharray="3,4"/>`;
     gridLines += `<text x="${(offX+3).toFixed(1)}" y="${(parseFloat(y)-2).toFixed(1)}" font-size="7" fill="#4a7a95" font-family="Segoe UI,sans-serif" opacity="0.6">${lat}°</text>`;
   }
-  for (let lng = -70; lng <= -35; lng += 10) {
+  if (!_mapaZoomUf) for (let lng = -70; lng <= -35; lng += 10) {
     const [x] = px(lng, LAT_MAX);
     gridLines += `<line x1="${x}" y1="${offY.toFixed(1)}" x2="${x}" y2="${(offY+mapH).toFixed(1)}" stroke="#7ab0cc" stroke-width="0.4" opacity="0.25" stroke-dasharray="3,4"/>`;
     gridLines += `<text x="${(parseFloat(x)+2).toFixed(1)}" y="${(offY+mapH+12).toFixed(1)}" font-size="7" fill="#4a7a95" font-family="Segoe UI,sans-serif" opacity="0.6">${lng}°</text>`;
@@ -2265,6 +2294,26 @@ async function renderMapa() {
 </svg>`;
 
   container.innerHTML = svg;
+
+  // Clique num estado da zoom nele (ou volta pro Brasil, se clicar no
+  // unico estado ja mostrado com zoom ativo).
+  container.querySelectorAll('path[data-uf]').forEach(el => {
+    const uf = el.dataset.uf;
+    if (!uf) return;
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', () => {
+      _mapaZoomUf = (_mapaZoomUf === uf) ? null : uf;
+      renderMapa();
+    });
+  });
+
+  // Breadcrumb / botao de voltar
+  const breadcrumb = document.getElementById('map-breadcrumb');
+  if (breadcrumb) {
+    breadcrumb.innerHTML = _mapaZoomUf
+      ? `<button onclick="_mapaZoomUf=null;renderMapa()" style="border:1px solid var(--border);background:#fff;border-radius:6px;padding:4px 10px;font-size:.78rem;font-weight:600;cursor:pointer;color:#1a3a5c">◀ Voltar ao Brasil</button> <span style="color:#64748b;margin-left:8px">Mostrando: <b>${STATE_NAMES[_mapaZoomUf]||_mapaZoomUf}</b> (${cities.length} cidade${cities.length===1?'':'s'})</span>`
+      : `<span style="color:#64748b">Clique num estado no mapa pra ver as cidades de perto.</span>`;
+  }
 
   // Tooltip setup
   if (!_mapTooltip) {
