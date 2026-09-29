@@ -160,28 +160,38 @@ def _fmt_nf_data(v):
         return ""
 
 
-def _remover_duplicatas_obsoletas(df):
-    """Se uma NF aparece com Coletada='Coletado' em alguma minuta, remove
-    QUALQUER outra ocorrencia dessa mesma NF com status diferente (Nao
-    Coletado ou NF Recebida e Nao Coletado) em outras minutas -- a nota
-    foi reprocessada/reemitida depois, entao a entrada antiga (cancelada
-    ou ainda pendente) nao e mais relevante pro cliente ver, so a mais
-    recente (Coletado) importa. NF/DOC pode ter varias notas numa celula
-    so (separadas por virgula), entao compara nota a nota."""
-    def notas(cel):
-        return [n.strip() for n in str(cel).split(",") if n.strip()]
+def _agrupar_nf_duplicada(df):
+    """Nao remove mais nada: se uma NF aparece em mais de uma minuta (ex.:
+    cancelada numa minuta e depois reemitida com CT-e valido em outra),
+    TODAS as linhas continuam aparecendo -- so reordena pra que a linha
+    com Coletada='Coletado' dessa NF venha primeiro, e as demais
+    (Cancelada/Pendente da mesma NF) fiquem logo abaixo dela, uma
+    embaixo da outra. Linhas de NF sem duplicata mantem a posicao
+    original (ordem de extracao/minuta). NF/DOC pode ter varias notas
+    numa celula so (separadas por virgula) -- usa a primeira como chave
+    de agrupamento."""
+    df = df.reset_index(drop=True)
 
-    nfs_emitidas = set()
-    for cel in df.loc[df["Coletada"] == "Coletado", "NF/DOC"]:
-        nfs_emitidas.update(notas(cel))
+    def primeira_nota(cel):
+        partes = [n.strip() for n in str(cel).split(",") if n.strip()]
+        return partes[0] if partes else None
 
-    def obsoleta(row):
-        if row["Coletada"] == "Coletado":
-            return False
-        return any(n in nfs_emitidas for n in notas(row["NF/DOC"]))
+    chave = df["NF/DOC"].apply(primeira_nota)
 
-    mascara = df.apply(obsoleta, axis=1)
-    return df[~mascara], int(mascara.sum())
+    pos_coletado = {}
+    for i, (k, coletada) in enumerate(zip(chave, df["Coletada"])):
+        if coletada == "Coletado" and k is not None and k not in pos_coletado:
+            pos_coletado[k] = i
+
+    def ordem(i):
+        k = chave.iloc[i]
+        ancora = pos_coletado.get(k, i)
+        eh_coletado = 0 if df["Coletada"].iloc[i] == "Coletado" else 1
+        return (ancora, eh_coletado, i)
+
+    idx_ordenado = sorted(range(len(df)), key=ordem)
+    n_reagrupadas = sum(1 for i in range(len(df)) if pos_coletado.get(chave.iloc[i]) not in (None, i))
+    return df.iloc[idx_ordenado].reset_index(drop=True), n_reagrupadas
 
 
 def _mapear_coletada(status_cte):
@@ -231,8 +241,8 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
         consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
         log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
         consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
-        consolidado, n_obsoletas = _remover_duplicatas_obsoletas(consolidado)
-        log(f"Entradas obsoletas removidas (NF reemitida em outra minuta): {n_obsoletas}.")
+        consolidado, n_reagrupadas = _agrupar_nf_duplicada(consolidado)
+        log(f"Linhas reagrupadas por NF duplicada (mostrando logo abaixo da linha 'Coletado'): {n_reagrupadas}.")
 
         # Guarda tambem os xlsx (bruto + consolidado) na pasta do cliente no
         # OneDrive, pro Mauro poder abrir/conferir manualmente quando quiser
