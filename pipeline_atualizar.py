@@ -23,6 +23,7 @@ Uso:
   python pipeline_atualizar.py
 """
 
+import json
 import os
 import smtplib
 import subprocess
@@ -33,11 +34,13 @@ from email.utils import formataddr
 from pathlib import Path
 
 import pandas as pd
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 import atualizar_dashboard as ad
 import extrair_portal as ep
 from config import CONFIG
+
+RELATORIO_NFS = "NFs_Emitida_Ansell"
 
 REPO_DIR = Path(__file__).parent
 ONEDRIVE_ANALISE_ANSELL = Path(CONFIG["onedrive_consolidado"])
@@ -88,6 +91,141 @@ def extrair_arquivos(usuario, senha, data_ini, data_fim, pasta_tmp: Path) -> dic
     return arquivos
 
 
+def _marcar_status_minuta_todas(page):
+    """Abre o painel 'Status Minuta', desmarca o padrao (TODAS / EMITIDAS,
+    id_0) e marca so 'TODAS' (id_18, ultima caixa da lista)."""
+    page.click("#minuta_status")
+    page.wait_for_selector("#minuta_status_id_18", state="visible", timeout=10000)
+    if page.is_checked("#minuta_status_id_0"):
+        page.uncheck("#minuta_status_id_0")
+    page.check("#minuta_status_id_18")
+    page.click("#minuta_status")  # fecha o painel
+
+
+def _marcar_status_cte_todas(page):
+    """'Status CTe' e um <select> simples (nao checklist) -- escolhe TODAS
+    (value=0), localizado pela posicao estrutural ao lado do botao de
+    Status Minuta (o campo nao tem id/name proprios)."""
+    select = page.locator("#minuta_status").locator(
+        "xpath=ancestor::td[1]/following-sibling::td[1]//select"
+    )
+    select.select_option(value="0")
+
+
+def _extrair_nfs_cliente(page, cliente, data_ini, data_fim, pasta_saida: Path) -> Path:
+    log(f"\n=== Relatorio de Notas Fiscais: {cliente} ===")
+    page.goto(ep.RELATORIO_URL)
+    page.wait_for_load_state("networkidle")
+
+    cliente_input = ep.get_cliente_input(page)
+    cliente_input.fill(cliente)
+    ep.set_date_range(page, data_ini, data_fim)
+
+    _marcar_status_cte_todas(page)
+    _marcar_status_minuta_todas(page)
+
+    page.get_by_role("button", name="PESQUISAR").click()
+    page.wait_for_selector("text=/registros|Selecione um dos relat/i", timeout=30000)
+
+    page.get_by_text("Personalizado Excel", exact=False).click()
+    page.wait_for_selector("text=Personalizar Relatório", timeout=15000)
+    page.get_by_text("Meus relatórios", exact=False).click()
+    page.wait_for_selector("text=Relatórios Personalizados", timeout=15000)
+    page.get_by_role("radio", name=RELATORIO_NFS).check()
+
+    pasta_saida.mkdir(parents=True, exist_ok=True)
+    destino = pasta_saida / f"nfs_{cliente.lower()}.xlsx"
+
+    with page.expect_download(timeout=180000) as download_info:
+        page.get_by_role("button", name="Gerar").click()
+        try:
+            page.wait_for_selector("text=Escolha o tipo de exportação", timeout=5000)
+            page.get_by_role("button", name="XLSX").click()
+        except PlaywrightTimeoutError:
+            pass
+    download_info.value.save_as(destino)
+    log(f"Salvo: {destino}")
+    return destino
+
+
+def _mapear_coletada(status_cte):
+    """Coluna derivada 'Coletada', a partir do STATUS CT-e:
+    Autorizado/Criado -> Cte Emitido; Cancelado -> Cancelado;
+    em branco -> NF Recebida e Nao Coletado."""
+    if pd.isna(status_cte) or not str(status_cte).strip():
+        return "NF Recebida e Não Coletado"
+    s = str(status_cte).strip().lower()
+    if s.startswith("autorizado") or s.startswith("criado"):
+        return "Cte Emitido"
+    if s.startswith("cancelado"):
+        return "Cancelado"
+    return status_cte
+
+
+def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
+    """Extrai o relatorio 'NFs_Emitida_Ansell' (Status Minuta/CTe = TODAS)
+    pra Ansell e Hercules, numa sessao de navegador propria e separada da
+    extracao principal. Passo isolado: qualquer falha aqui e so logada
+    (retorna None), nunca derruba o resto do pipeline -- a aba "Status NF"
+    do dashboard so fica um pouco desatualizada ate a proxima rodada."""
+    log("\n=== Extraindo Status NF (CT-e) ===")
+    try:
+        arquivos = {}
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(accept_downloads=True)
+            page = context.new_page()
+            page.set_default_timeout(60000)
+            try:
+                ep.login(page, usuario, senha)
+                for cliente in ep.CLIENTES:
+                    arquivos[cliente] = _extrair_nfs_cliente(page, cliente, data_ini, data_fim, pasta_tmp)
+            finally:
+                browser.close()
+
+        dfs = []
+        for cliente, caminho in arquivos.items():
+            df = pd.read_excel(caminho)
+            df.insert(0, "CLIENTE_ORIGEM", cliente)
+            dfs.append(df)
+        consolidado = pd.concat(dfs, ignore_index=True).fillna("")
+        # Minuta sem NF nenhuma (campo NF/DOC vazio) nao e "NF recebida e
+        # nao coletada" -- e so uma minuta sem nota ainda. Nao apresentar.
+        antes = len(consolidado)
+        consolidado = consolidado[consolidado["NF/DOC"].astype(str).str.strip() != ""]
+        log(f"Minutas sem NF removidas: {antes - len(consolidado)} (de {antes}).")
+        consolidado["Coletada"] = consolidado["STATUS CT-e"].apply(_mapear_coletada)
+
+        # Guarda tambem os xlsx (bruto + consolidado) na pasta do cliente no
+        # OneDrive, pro Mauro poder abrir/conferir manualmente quando quiser
+        # -- mesmo caminho que ja usavamos quando isso era feito na mao.
+        if ONEDRIVE_ANALISE_ANSELL.parent.exists():
+            for cliente, caminho in arquivos.items():
+                destino = ONEDRIVE_ANALISE_ANSELL / f"nfs_{cliente.lower()}.xlsx"
+                pd.read_excel(caminho).to_excel(destino, index=False)
+            consolidado.to_excel(ONEDRIVE_ANALISE_ANSELL / "Relatorio_Notas_Fiscais.xlsx", index=False)
+            log("Relatorio_Notas_Fiscais.xlsx e arquivos brutos atualizados no OneDrive.")
+
+        nf_status = [
+            {
+                "cliente_origem": str(r["CLIENTE_ORIGEM"]),
+                "minuta": str(r["MINUTA"]),
+                "cte": str(r["CTE"]),
+                "status_cte": str(r["STATUS CT-e"]),
+                "nf": str(r["NF/DOC"]),
+                "cliente": str(r["CLIENTE"]),
+                "coletada": str(r["Coletada"]),
+            }
+            for _, r in consolidado.iterrows()
+        ]
+        log(f"Status NF extraido ({len(nf_status)} linhas).")
+        return nf_status
+    except Exception:
+        import traceback
+        log("Falha ao extrair Status NF (nao afeta o resto do pipeline):\n" + traceback.format_exc())
+        return None
+
+
 def consolidar(arquivos: dict, destino: Path) -> Path:
     log("\nConsolidando planilhas...")
     dfs = [pd.read_excel(caminho, sheet_name="Brudam") for caminho in arquivos.values()]
@@ -104,17 +242,18 @@ def _sem_timestamp(raw):
     return {"meta": meta, "rows": raw.get("rows")}
 
 
-def atualizar_html(xlsx_consolidado: Path) -> bool:
+def atualizar_html(xlsx_consolidado: Path, nf_status=None) -> bool:
     """Atualiza o index.html. O timestamp 'gerado_em' e sempre renovado
     (para refletir a ultima vez que a rotina rodou), mas o retorno indica
-    se os dados de frete em si (fora do timestamp) realmente mudaram."""
+    se os dados de frete em si (fora do timestamp) realmente mudaram.
+    Se nf_status vier preenchido (extracao de Status NF deu certo nesta
+    rodada), tambem regrava o bloco NF_STATUS; se vier None (extracao
+    falhou ou foi pulada), deixa o bloco existente como esta."""
     log("\nAtualizando index.html...")
     df = pd.read_excel(xlsx_consolidado, sheet_name="Brudam")
     rows = ad.build_rows(df)
     raw = ad.build_raw(rows)
     log(f"Periodo: {raw['meta']['meses'][0]} a {raw['meta']['meses'][-1]} | {len(rows)} linhas")
-
-    import json
 
     index_path = REPO_DIR / "index.html"
     index_content = index_path.read_text(encoding="utf-8")
@@ -125,6 +264,14 @@ def atualizar_html(xlsx_consolidado: Path) -> bool:
 
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = ad.replace_json_blob(index_content, "const RAW = ", raw_json)
+
+    if nf_status is not None:
+        nf_status_json = json.dumps(nf_status, ensure_ascii=False)
+        index_content = ad.replace_json_blob(index_content, "const NF_STATUS = ", nf_status_json)
+        log(f"Bloco NF_STATUS atualizado ({len(nf_status)} linhas).")
+    else:
+        log("Bloco NF_STATUS mantido como estava (sem extracao nova nesta rodada).")
+
     index_path.write_text(index_content, encoding="utf-8")
 
     log("index.html atualizado.")
@@ -240,7 +387,9 @@ def main():
         destino_consolidado = REPO_DIR / "downloads_tmp" / nome_consolidado
     consolidado_path = consolidar(arquivos, destino_consolidado)
 
-    dados_mudaram = atualizar_html(consolidado_path)
+    nf_status = extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp)
+
+    dados_mudaram = atualizar_html(consolidado_path, nf_status)
     commit_e_push(dados_mudaram)
 
     link = CONFIG["link_dashboard"]
