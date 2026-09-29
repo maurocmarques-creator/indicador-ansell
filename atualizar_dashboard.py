@@ -240,6 +240,11 @@ def build_rows(df, hoje=None):
         eff_cidade = _primeiro_preenchido(r.get('CIDADE DESTINO', ''), r['CIDADE ENTREGA'])
         eff_uf = _primeiro_preenchido(r.get('UF DESTINO', ''), r['UF ENTREGA'])
         redespacho = _primeiro_preenchido(r['LOCAL ENTREGA'], '')
+        # Se o local de entrega e igual ao destinatario, nao e redespacho
+        # de verdade (so duplicou o mesmo nome nos dois campos) -- nesse
+        # caso o valido e o destinatario, entao deixa em branco.
+        if redespacho.strip().upper() == str(eff_local).strip().upper():
+            redespacho = ''
         coord = CITY_COORD.get(f"{eff_cidade}|{eff_uf}") or UF_CENTROID.get(eff_uf)
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
