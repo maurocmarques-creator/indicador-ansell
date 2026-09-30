@@ -370,7 +370,7 @@ tr:last-child td{border-bottom:none}
 
 <!-- TAB: OCORRENCIAS -->
 <div id="tab-ocorrencias" class="content">
-  <p style="font-size:.78rem;color:#64748b;margin:0 0 14px">Histórico de ocorrências-problema registradas nas minutas (material recusado, mercadoria extraviada, falta de mercadoria, entrega recusada, etc. — acompanhamento de rotina do trajeto, tipo "em rota de entrega", não entra aqui). Como o portal só informa a última ocorrência de cada minuta, cada mudança é guardada pra não se perder quando a ocorrência for atualizada. Clique numa linha pra ver o motivo detalhado, quando já tiver sido marcado.</p>
+  <p style="font-size:.78rem;color:#64748b;margin:0 0 14px">Histórico de ocorrências-problema registradas nas minutas (material recusado, mercadoria extraviada, falta de mercadoria, entrega recusada, etc. — acompanhamento de rotina do trajeto, tipo "em rota de entrega", não entra aqui). Como o portal só informa a última ocorrência de cada minuta, cada mudança é guardada pra não se perder quando a ocorrência for atualizada. Clique numa ocorrência pra ver os motivos (% dentro dela); clique num motivo pra ver as notas fiscais.</p>
   <div class="kpi-row">
     <div class="kpi"><label>Total de Ocorrências</label><div class="value" id="kpi-oc-total">-</div><div class="sub">no período filtrado</div></div>
     <div class="kpi"><label>Minutas Afetadas</label><div class="value" id="kpi-oc-minutas">-</div><div class="sub">minutas únicas</div></div>
@@ -401,7 +401,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <table>
-      <thead><tr><th></th><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Ocorrência</th><th>Detectado em</th></tr></thead>
+      <thead><tr><th>Ocorrência</th><th>Quantidade</th><th>% do Total</th></tr></thead>
       <tbody id="tb-ocorrencias"></tbody>
     </table>
   </div>
@@ -1965,8 +1965,11 @@ function renderOcorrencias() {
   const contagem = {};
   linhas.forEach(l => { contagem[l.descricao] = (contagem[l.descricao]||0) + 1; });
   const tiposOrdenados = Object.entries(contagem).sort((a,b)=>b[1]-a[1]);
+  const pctDoTotal = n => linhas.length ? +(n/linhas.length*100).toFixed(1) : 0;
   document.getElementById('kpi-oc-top').textContent = tiposOrdenados.length ? tiposOrdenados[0][0] : '—';
-  document.getElementById('kpi-oc-top-sub').textContent = tiposOrdenados.length ? tiposOrdenados[0][1].toLocaleString('pt-BR')+' ocorrências' : '—';
+  document.getElementById('kpi-oc-top-sub').textContent = tiposOrdenados.length
+    ? `${tiposOrdenados[0][1].toLocaleString('pt-BR')} ocorrências · ${pctDoTotal(tiposOrdenados[0][1])}% do total`
+    : '—';
 
   destroyChart('ocorrencias-tipo');
   const labelsTipo = tiposOrdenados.map(t=>t[0]);
@@ -1974,7 +1977,11 @@ function renderOcorrencias() {
   charts['ocorrencias-tipo'] = new Chart(document.getElementById('ch-ocorrencias-tipo'), {
     type:'bar',
     data:{labels:labelsTipo, datasets:[{label:'Ocorrências',data:dadosTipo,backgroundColor:COLORS.light,borderRadius:6}]},
-    options:{indexAxis:'y',responsive:true,layout:{padding:{right:60}},plugins:{legend:{display:false},datalabels:dadosTipo.length?dlBarH(dadosTipo):undefined},scales:{x:{grid:{color:'#f1f5f9'},ticks:{callback:v=>v.toLocaleString('pt-BR')}},y:{grid:{display:false}}}}
+    options:{indexAxis:'y',responsive:true,layout:{padding:{right:70}},plugins:{legend:{display:false},datalabels:dadosTipo.length?{
+      anchor:'end', align:'right',
+      color:'#1e293b', font:{weight:'700', size:11},
+      formatter: v => v.toLocaleString('pt-BR')+' ('+pctDoTotal(v)+'%)',
+    }:undefined},scales:{x:{grid:{color:'#f1f5f9'},ticks:{callback:v=>v.toLocaleString('pt-BR')}},y:{grid:{display:false}}}}
   });
 
   function popularSelect(id, valores, atual) {
@@ -1997,41 +2004,121 @@ function renderOcorrencias() {
     (!fCliente || l.CLIENTE===fCliente) &&
     (!fDest || l.EFF_LOCAL===fDest) &&
     (!fCidade || cidadeUf(l)===fCidade)
-  ).sort((a,b) => (b.detectado_em||'').localeCompare(a.detectado_em||''));
+  );
 
-  function rowHtml(l, idx) {
-    return `<tr style="cursor:pointer" onclick="toggleOcorrenciaDetalhe(${idx})">
-      <td id="oc-caret-${idx}" style="color:#64748b">▸</td>
-      <td>${escHtml(l.MINUTA)}</td>
-      <td>${escHtml(l.NF_DOC)}</td>
-      <td>${escHtml(l.CLIENTE)}</td>
-      <td>${escHtml(l.EFF_LOCAL||'—')}</td>
-      <td>${escHtml(l.EFF_CIDADE||'—')}${l.EFF_UF?'/'+escHtml(l.EFF_UF):''}</td>
-      <td>${escHtml(l.REDESPACHO||'—')}</td>
-      <td>${escHtml(l.descricao)}</td>
-      <td>${escHtml(l.detectado_em||'—')}</td>
-    </tr>
-    <tr id="oc-detalhe-${idx}" style="display:none;background:#f8fafc">
-      <td colspan="9" style="padding:10px 14px;font-size:.8rem;color:#64748b">
-        <b>Motivo:</b> ${l.motivo ? escHtml(l.motivo) : 'ainda não marcado pelo time (marcação feita no Mural)'}
+  // Nivel 1: agrupa por tipo de ocorrencia, com % sobre o total filtrado.
+  const porTipo = {};
+  filtradas.forEach(l => {
+    if (!porTipo[l.descricao]) porTipo[l.descricao] = { descricao: l.descricao, itens: [] };
+    porTipo[l.descricao].itens.push(l);
+  });
+  const totalFiltradas = filtradas.length;
+  const tipos = Object.values(porTipo).map(t => ({
+    ...t, count: t.itens.length,
+    pct: totalFiltradas ? t.itens.length/totalFiltradas*100 : 0,
+  })).sort((a,b) => b.count-a.count);
+
+  // Nivel 3: notas fiscais/minutas individuais que compoem um motivo
+  // dentro de uma ocorrencia -- so monta quando expandido.
+  function nfHtml(motivoGrupo) {
+    const itens = motivoGrupo.itens.slice().sort((a,b) => (b.detectado_em||'').localeCompare(a.detectado_em||''));
+    return `<tr>
+      <td colspan="3" style="padding:2px 0 8px 24px;background:#eef2f7">
+        <table style="width:100%">
+          <thead><tr style="font-size:.68rem;color:#64748b">
+            <th style="padding:3px 8px;text-align:left">Minuta</th><th style="text-align:left">NF</th>
+            <th style="text-align:left">Cliente</th><th style="text-align:left">Destinatário</th>
+            <th style="text-align:left">Cidade/UF</th><th style="text-align:left">Redespacho</th>
+            <th style="text-align:left">Detectado em</th>
+          </tr></thead>
+          <tbody>
+            ${itens.map(l => `<tr style="font-size:.74rem">
+              <td style="padding:3px 8px">${escHtml(l.MINUTA)}</td>
+              <td>${escHtml(l.NF_DOC)}</td>
+              <td>${escHtml(l.CLIENTE)}</td>
+              <td>${escHtml(l.EFF_LOCAL||'—')}</td>
+              <td>${escHtml(l.EFF_CIDADE||'—')}${l.EFF_UF?'/'+escHtml(l.EFF_UF):''}</td>
+              <td>${escHtml(l.REDESPACHO||'—')}</td>
+              <td>${escHtml(l.detectado_em||'—')}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
       </td>
     </tr>`;
   }
 
-  document.getElementById('tb-ocorrencias').innerHTML = filtradas.length
-    ? filtradas.map(rowHtml).join('')
-    : `<tr><td colspan="9" style="text-align:center;color:#64748b;padding:12px">${linhas.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma ocorrência registrada ainda (o histórico começa a partir de agora)'}</td></tr>`;
+  // Nivel 2: motivos dentro de uma ocorrencia, com % recalculado sobre
+  // o total DAQUELA ocorrencia (soma 100% so entre os motivos dela).
+  function motivosHtml(tipo) {
+    const porMotivo = {};
+    tipo.itens.forEach(l => {
+      const chave = l.motivo || '';
+      if (!porMotivo[chave]) porMotivo[chave] = { motivo: chave, itens: [] };
+      porMotivo[chave].itens.push(l);
+    });
+    const motivos = Object.values(porMotivo).map(m => ({
+      ...m, count: m.itens.length,
+      pct: tipo.count ? m.itens.length/tipo.count*100 : 0,
+    })).sort((a,b) => b.count-a.count);
+
+    return `<tr>
+      <td colspan="3" style="padding:2px 0 10px;background:#f8fafc">
+        <table style="width:100%">
+          <thead><tr style="font-size:.7rem;color:#64748b">
+            <th style="padding:4px 10px 4px 24px;text-align:left">Motivo</th>
+            <th style="text-align:left">Ocorrências</th><th style="text-align:left">% da ocorrência</th>
+          </tr></thead>
+          <tbody>
+            ${motivos.map(m => {
+              const chave3 = tipo.descricao+'|'+m.motivo;
+              const chave3Esc = chave3.replace(/'/g,"\\'");
+              const aberto3 = _ocorrenciasExpandidoNivel3.has(chave3);
+              const rotulo = m.motivo ? escHtml(m.motivo) : 'Não marcado pelo time (marcação feita no Mural)';
+              const linha = `<tr style="font-size:.78rem;cursor:pointer" onclick="toggleOcorrenciasNivel3('${chave3Esc}')" title="Clique para ver as notas fiscais">
+                <td style="padding:4px 10px 4px 24px"><span style="display:inline-block;width:12px">${aberto3?'▼':'▶'}</span>${rotulo}</td>
+                <td>${m.count.toLocaleString('pt-BR')}</td>
+                <td>${m.pct.toFixed(1)}%</td>
+              </tr>`;
+              return linha + (aberto3 ? nfHtml(m) : '');
+            }).join('')}
+          </tbody>
+        </table>
+      </td>
+    </tr>`;
+  }
+
+  function tipoRowHtml(tipo) {
+    const aberto = _ocorrenciasExpandido.has(tipo.descricao);
+    const chaveEsc = tipo.descricao.replace(/'/g,"\\'");
+    const linha = `<tr style="cursor:pointer" onclick="toggleOcorrenciasExpand('${chaveEsc}')" title="Clique para ver os motivos">
+      <td><span style="display:inline-block;width:14px">${aberto?'▼':'▶'}</span>${escHtml(tipo.descricao)}</td>
+      <td>${tipo.count.toLocaleString('pt-BR')}</td>
+      <td>${tipo.pct.toFixed(1)}%</td>
+    </tr>`;
+    return linha + (aberto ? motivosHtml(tipo) : '');
+  }
+
+  document.getElementById('tb-ocorrencias').innerHTML = tipos.length
+    ? tipos.map(tipoRowHtml).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:#64748b;padding:12px">${linhas.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma ocorrência registrada ainda (o histórico começa a partir de agora)'}</td></tr>`;
 
   OCORRENCIAS_EXPORT = filtradas;
 }
 
-function toggleOcorrenciaDetalhe(idx) {
-  const tr = document.getElementById('oc-detalhe-'+idx);
-  if (!tr) return;
-  const aberto = tr.style.display !== 'none';
-  tr.style.display = aberto ? 'none' : 'table-row';
-  const caret = document.getElementById('oc-caret-'+idx);
-  if (caret) caret.textContent = aberto ? '▸' : '▾';
+// Nivel 1->2 (ocorrencia -> motivos) e nivel 2->3 (motivo -> notas
+// fiscais), guardados por chave (nao por indice), pra continuar aberto
+// entre re-renders causados pelos filtros.
+let _ocorrenciasExpandido = new Set();
+function toggleOcorrenciasExpand(chave) {
+  if (_ocorrenciasExpandido.has(chave)) _ocorrenciasExpandido.delete(chave);
+  else _ocorrenciasExpandido.add(chave);
+  renderOcorrencias();
+}
+let _ocorrenciasExpandidoNivel3 = new Set();
+function toggleOcorrenciasNivel3(chave) {
+  if (_ocorrenciasExpandidoNivel3.has(chave)) _ocorrenciasExpandidoNivel3.delete(chave);
+  else _ocorrenciasExpandidoNivel3.add(chave);
+  renderOcorrencias();
 }
 
 // --- ENTREGAS ANTECIPADAS ---
