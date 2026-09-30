@@ -683,5 +683,11 @@
         "data": "29/09/2026 10:35"
       }
     ]
+  },
+  "motivos_ocorrencia": {
+    "269065": {
+      "motivo": "Pedido Divergente",
+      "definido_em": "30/09/2026 16:19"
+    }
   }
 }
