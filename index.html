@@ -401,7 +401,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <table>
-      <thead><tr><th>Ocorrência</th><th>Quantidade</th><th>% do Total</th></tr></thead>
+      <thead><tr><th>Ocorrência</th><th>Quantidade</th><th>% do Total</th><th>Caixas</th><th>Peso (kg)</th><th>Valor Mercadoria</th></tr></thead>
       <tbody id="tb-ocorrencias"></tbody>
     </table>
   </div>
@@ -1949,10 +1949,12 @@ function renderOcorrencias() {
     if (!hist || !hist.length) return;
     hist.forEach(ev => {
       if (!isOcorrenciaProblema(ev.descricao)) return;
+      const nfStatus = NF_STATUS.find(n => n.minuta === r.MINUTA);
       linhas.push({
-        MINUTA: r.MINUTA, NF_DOC: r.NF_DOC, CLIENTE: r.CLIENTE,
+        MINUTA: r.MINUTA, NF_DOC: r.NF_DOC, CTE: nfStatus ? nfStatus.cte : '', CLIENTE: r.CLIENTE,
         EFF_LOCAL: r.EFF_LOCAL, EFF_CIDADE: r.EFF_CIDADE, EFF_UF: r.EFF_UF,
-        REDESPACHO: r.REDESPACHO,
+        REDESPACHO: r.REDESPACHO, DATA_EMISSAO: r['DATA EMISSAO'],
+        VOLUMES: r.VOLUMES||0, PESO: r.PESO||0, NF_VALOR: r['NF VALOR']||0, FRETE_TOTAL: r['FRETE TOTAL']||0,
         descricao: ev.descricao, detectado_em: ev.detectado_em,
         motivo: r.MOTIVO_OCORRENCIA || '',
       });
@@ -2013,33 +2015,48 @@ function renderOcorrencias() {
     porTipo[l.descricao].itens.push(l);
   });
   const totalFiltradas = filtradas.length;
+  const somaCampo = (itens, campo) => itens.reduce((a,l) => a+(l[campo]||0), 0);
   const tipos = Object.values(porTipo).map(t => ({
     ...t, count: t.itens.length,
     pct: totalFiltradas ? t.itens.length/totalFiltradas*100 : 0,
+    somaCaixas: somaCampo(t.itens, 'VOLUMES'),
+    somaPeso: somaCampo(t.itens, 'PESO'),
+    somaValor: somaCampo(t.itens, 'NF_VALOR'),
   })).sort((a,b) => b.count-a.count);
 
   // Nivel 3: notas fiscais/minutas individuais que compoem um motivo
   // dentro de uma ocorrencia -- so monta quando expandido.
   function nfHtml(motivoGrupo) {
     const itens = motivoGrupo.itens.slice().sort((a,b) => (b.detectado_em||'').localeCompare(a.detectado_em||''));
+    function fmtDataBR(iso) {
+      if (!iso) return '—';
+      const [y,m,dd] = iso.split('-');
+      return dd+'/'+m+'/'+y;
+    }
     return `<tr>
-      <td colspan="3" style="padding:2px 0 8px 24px;background:#eef2f7">
+      <td colspan="6" style="padding:2px 0 8px 24px;background:#eef2f7">
         <table style="width:100%">
           <thead><tr style="font-size:.68rem;color:#64748b">
-            <th style="padding:3px 8px;text-align:left">Minuta</th><th style="text-align:left">NF</th>
+            <th style="padding:3px 8px;text-align:left">Minuta</th><th style="text-align:left">CT-e</th>
+            <th style="text-align:left">NF</th><th style="text-align:left">Data Emissão</th>
             <th style="text-align:left">Cliente</th><th style="text-align:left">Destinatário</th>
-            <th style="text-align:left">Cidade/UF</th><th style="text-align:left">Redespacho</th>
-            <th style="text-align:left">Detectado em</th>
+            <th style="text-align:left">Cidade/UF</th><th style="text-align:left">QTD Caixa</th>
+            <th style="text-align:left">Peso (kg)</th><th style="text-align:left">Valor Mercadoria</th>
+            <th style="text-align:left">Total Frete</th>
           </tr></thead>
           <tbody>
             ${itens.map(l => `<tr style="font-size:.74rem">
               <td style="padding:3px 8px">${escHtml(l.MINUTA)}</td>
+              <td>${escHtml(l.CTE||'—')}</td>
               <td>${escHtml(l.NF_DOC)}</td>
+              <td>${fmtDataBR(l.DATA_EMISSAO)}</td>
               <td>${escHtml(l.CLIENTE)}</td>
               <td>${escHtml(l.EFF_LOCAL||'—')}</td>
               <td>${escHtml(l.EFF_CIDADE||'—')}${l.EFF_UF?'/'+escHtml(l.EFF_UF):''}</td>
-              <td>${escHtml(l.REDESPACHO||'—')}</td>
-              <td>${escHtml(l.detectado_em||'—')}</td>
+              <td>${(l.VOLUMES||0).toLocaleString('pt-BR')}</td>
+              <td>${(l.PESO||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td>
+              <td style="white-space:nowrap">${fmtR(l.NF_VALOR||0)}</td>
+              <td style="white-space:nowrap">${fmtR(l.FRETE_TOTAL||0)}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -2062,7 +2079,7 @@ function renderOcorrencias() {
     })).sort((a,b) => b.count-a.count);
 
     return `<tr>
-      <td colspan="3" style="padding:2px 0 10px;background:#f8fafc">
+      <td colspan="6" style="padding:2px 0 10px;background:#f8fafc">
         <table style="width:100%">
           <thead><tr style="font-size:.7rem;color:#64748b">
             <th style="padding:4px 10px 4px 24px;text-align:left">Motivo</th>
@@ -2094,13 +2111,16 @@ function renderOcorrencias() {
       <td><span style="display:inline-block;width:14px">${aberto?'▼':'▶'}</span>${escHtml(tipo.descricao)}</td>
       <td>${tipo.count.toLocaleString('pt-BR')}</td>
       <td>${tipo.pct.toFixed(1)}%</td>
+      <td>${tipo.somaCaixas.toLocaleString('pt-BR')}</td>
+      <td>${tipo.somaPeso.toLocaleString('pt-BR',{maximumFractionDigits:0})}</td>
+      <td style="white-space:nowrap">${fmtR(tipo.somaValor)}</td>
     </tr>`;
     return linha + (aberto ? motivosHtml(tipo) : '');
   }
 
   document.getElementById('tb-ocorrencias').innerHTML = tipos.length
     ? tipos.map(tipoRowHtml).join('')
-    : `<tr><td colspan="3" style="text-align:center;color:#64748b;padding:12px">${linhas.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma ocorrência registrada ainda (o histórico começa a partir de agora)'}</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center;color:#64748b;padding:12px">${linhas.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma ocorrência registrada ainda (o histórico começa a partir de agora)'}</td></tr>`;
 
   OCORRENCIAS_EXPORT = filtradas;
 }
