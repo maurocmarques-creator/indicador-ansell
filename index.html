@@ -355,14 +355,14 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <table>
-      <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Vencidos</th><th>Descrição</th></tr></thead>
+      <thead><tr><th>Minuta</th><th>NF</th><th>ID de Carregamento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Vencidos</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-fora"></tbody>
     </table>
   </div>
   <div class="table-card">
     <h3>Dentro do Prazo <span class="tag-filtro">(Prev. Entrega)</span></h3>
     <table>
-      <thead><tr><th>Minuta</th><th>NF</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Restantes</th><th>Descrição</th></tr></thead>
+      <thead><tr><th>Minuta</th><th>NF</th><th>ID de Carregamento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Restantes</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-dentro"></tbody>
     </table>
   </div>
@@ -470,7 +470,7 @@ tr:last-child td{border-bottom:none}
       </div>
     </div>
     <table>
-      <thead><tr><th>Minuta</th><th>CT-e</th><th>NF</th><th>Data NF</th><th>Data Recebimento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF Destino</th><th>Redespacho</th><th>Status CT-e</th><th>Coletada</th></tr></thead>
+      <thead><tr><th>Minuta</th><th>CT-e</th><th>NF</th><th>ID de Carregamento</th><th>Data NF</th><th>Data Recebimento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF Destino</th><th>Redespacho</th><th>Status CT-e</th><th>Coletada</th></tr></thead>
       <tbody id="tb-nf-status"></tbody>
     </table>
     <p id="nf-status-aviso" style="font-size:.75rem;color:#64748b;margin-top:8px"></p>
@@ -1807,6 +1807,7 @@ function renderTransito() {
     return `<tr${temMsg ? ' style="background:#fffdf5"' : ''}>
       <td>${r.MINUTA}${badgeMsg}</td>
       <td>${r.NF_DOC}</td>
+      <td>${r.ID_CARREGAMENTO||'—'}</td>
       <td>${r.CLIENTE}</td>
       <td>${r.EFF_LOCAL||'—'}</td>
       <td>${r.EFF_CIDADE||'—'}${r.EFF_UF?'/'+r.EFF_UF:''}</td>
@@ -1845,10 +1846,10 @@ function renderTransito() {
 
   document.getElementById('tb-transito-fora').innerHTML = foraFiltrado.length
     ? foraFiltrado.map(r=>rowHtml(r,'fora')).join('')
-    : `<tr><td colspan="10" style="text-align:center;color:#64748b;padding:12px">${fora.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
+    : `<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">${fora.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
   document.getElementById('tb-transito-dentro').innerHTML = dentro.length
     ? dentro.map(r=>rowHtml(r,'dentro')).join('')
-    : '<tr><td colspan="10" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega em trânsito dentro do prazo</td></tr>';
+    : '<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega em trânsito dentro do prazo</td></tr>';
 
   TRANSITO_EXPORT = { fora: foraFiltrado, dentro: dentro };
 }
@@ -1864,6 +1865,7 @@ function exportarTransitoExcel() {
       'STATUS': tipo === 'fora' ? 'FORA DO PRAZO' : 'DENTRO DO PRAZO',
       'MINUTA': r.MINUTA,
       'NF/DOC': r.NF_DOC,
+      'ID DE CARREGAMENTO': r.ID_CARREGAMENTO||'',
       'CLIENTE': r.CLIENTE,
       'MES': r.MES_NOME,
       'VOLUMES': r.VOLUMES,
@@ -2283,7 +2285,7 @@ function renderStatusNF() {
 
   let filtradas = base;
   if (status) filtradas = filtradas.filter(r => r.coletada === status);
-  if (busca) filtradas = filtradas.filter(r => (r.minuta+' '+r.cte+' '+r.nf).toLowerCase().includes(busca));
+  if (busca) filtradas = filtradas.filter(r => (r.minuta+' '+r.cte+' '+r.nf+' '+(r.id_carregamento||'')).toLowerCase().includes(busca));
 
   const LIMITE = 500;
   const mostrar = filtradas.slice(0, LIMITE);
@@ -2317,6 +2319,7 @@ function renderStatusNF() {
         <td>${ehHistorico?'↳ ':''}${r.minuta||'—'}${badge}</td>
         <td>${r.cte||'—'}</td>
         <td>${r.nf||'—'}</td>
+        <td>${r.id_carregamento||'—'}</td>
         <td>${fmtNfData(r.nf_data)}</td>
         <td>${fmtNfData(r.data_recebimento)}</td>
         <td>${r.cliente||'—'}</td>
@@ -2332,7 +2335,7 @@ function renderStatusNF() {
 
   document.getElementById('tb-nf-status').innerHTML = mostrar.length
     ? mostrar.map(r => linhaHtml(r, false)).join('')
-    : '<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">Nenhum resultado para os filtros selecionados</td></tr>';
+    : '<tr><td colspan="12" style="text-align:center;color:#64748b;padding:12px">Nenhum resultado para os filtros selecionados</td></tr>';
 
   const aviso = document.getElementById('nf-status-aviso');
   aviso.textContent = filtradas.length > LIMITE
