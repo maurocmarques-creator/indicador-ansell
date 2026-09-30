@@ -309,6 +309,14 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
             log("Relatorio_Notas_Fiscais.xlsx e arquivos brutos atualizados no OneDrive.")
 
         def linha_para_dict(r):
+            destino = str(r.get("DESTINO", ""))
+            local_entrega = str(r.get("LOCAL ENTREGA", ""))
+            # Mesma regra do Em Transito/index.html: se o local de entrega e
+            # o destinatario forem a mesma empresa (mesma normalizacao --
+            # sufixo societario, "DO SUL" a mais etc.), nao e redespacho de
+            # verdade, entao fica em branco.
+            if local_entrega and ad._normaliza_nome(local_entrega) == ad._normaliza_nome(destino):
+                local_entrega = ""
             return {
                 "cliente_origem": str(r["CLIENTE_ORIGEM"]),
                 "minuta": str(r["MINUTA"]),
@@ -327,10 +335,10 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 # local de entrega) -- .get com default, pra nao quebrar
                 # se o relatorio no portal mudar de novo e essas colunas
                 # sumirem/forem renomeadas.
-                "destino": str(r.get("DESTINO", "")),
+                "destino": destino,
                 "cidade_destino": str(r.get("CIDADE DESTINO", "")),
                 "uf_destino": str(r.get("UF DESTINO", "")),
-                "local_entrega": str(r.get("LOCAL ENTREGA", "")),
+                "local_entrega": local_entrega,
                 "cidade_entrega": str(r.get("CIDADE ENTREGA", "")),
                 "uf_entrega": str(r.get("UF ENTREGA", "")),
                 "coletada": str(r["Coletada"]),
