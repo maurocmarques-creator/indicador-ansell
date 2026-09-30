@@ -1794,7 +1794,7 @@ function exportarTransitoExcel() {
   }
   function linhaBruta(r, tipo) {
     return {
-      'STATUS': r.STATUS,
+      'STATUS': tipo === 'fora' ? 'FORA DO PRAZO' : 'DENTRO DO PRAZO',
       'MINUTA': r.MINUTA,
       'NF/DOC': r.NF_DOC,
       'CLIENTE': r.CLIENTE,
