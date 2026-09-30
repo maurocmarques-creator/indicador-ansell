@@ -587,6 +587,18 @@ function mostrarToast(msg, cor) {
   window._toastTimer = setTimeout(() => { t.style.display = 'none'; }, 6000);
 }
 
+// O Mural (Artifact do claude.ai) roda num iframe isolado por
+// seguranca -- a URL com "?minuta=" que o link abre nunca chega no
+// codigo da pagina dele (testado e confirmado). Por isso copia o
+// numero da minuta pra area de transferencia ao clicar no selo "💬":
+// o Mural abre com a busca ja focada, so falta colar (Ctrl+V).
+function copiarMinutaMural(minuta) {
+  if (!navigator.clipboard) return; // clipboard indisponivel (ex. http sem https) -- so nao copia, o link abre normal
+  navigator.clipboard.writeText(String(minuta))
+    .then(() => mostrarToast(`Minuta ${minuta} copiada — cole (Ctrl+V) na busca do Mural que abriu`, '#166534'))
+    .catch(() => {});
+}
+
 function initAtualizarAgora() {
   const btn = document.getElementById('btn-atualizar-agora');
   const btnGear = document.getElementById('btn-gear-atualizar');
@@ -1733,8 +1745,14 @@ function renderTransito() {
         <div style="font-size:.74rem;color:#1e293b">${escHtml(m.texto||'')}</div>
       </div>`).join('');
     const linkMural = `${MURAL_URL}?minuta=${encodeURIComponent(r.MINUTA)}`;
+    // O Mural roda num iframe isolado por seguranca do proprio claude.ai
+    // -- a URL com "?minuta=" que aparece no navegador nunca chega no
+    // codigo da pagina dele (nem location.search, nem referrer). Por
+    // isso copia o numero da minuta pra area de transferencia ao
+    // clicar: o Mural ja abre com a busca focada, so falta colar
+    // (Ctrl+V) pra filtrar direto na minuta certa.
     const badgeMsg = temMsg
-      ? ` <a href="${linkMural}" target="_blank" rel="noopener" title="Ver conversa completa no mural"
+      ? ` <a href="${linkMural}" target="_blank" rel="noopener" onclick="copiarMinutaMural('${r.MINUTA}')" title="Ver conversa completa no mural (copia a minuta -- é só colar Ctrl+V na busca de lá)"
             style="display:inline-block;margin-left:4px;padding:1px 7px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:.68rem;font-weight:700;text-decoration:none;vertical-align:middle;white-space:nowrap">💬 ${msgs.length}</a>`
       : '';
     return `<tr${temMsg ? ' style="background:#fffdf5"' : ''}>
