@@ -21,6 +21,13 @@ header{background:var(--primary);color:#fff;padding:0 24px;display:flex;align-it
 .tab{padding:10px 18px;font-size:.82rem;font-weight:600;color:rgba(255,255,255,.65);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap}
 .tab:hover{color:#fff}
 .tab.active{color:#fff;border-bottom-color:var(--accent)}
+.tgrp{position:relative}
+.tmenu{display:none;position:absolute;top:100%;left:0;min-width:210px;background:var(--primary);border-radius:0 0 8px 8px;box-shadow:0 8px 20px rgba(0,0,0,.3);z-index:120;padding:4px 0}
+.tgrp:hover .tmenu,.tgrp.open .tmenu{display:block}
+.tmenu .tab{border-bottom:0;border-left:3px solid transparent;padding:10px 18px}
+.tmenu .tab:hover{background:rgba(255,255,255,.08)}
+.tmenu .tab.active{border-left-color:var(--accent)}
+.tgrp-btn.active{color:#fff;border-bottom-color:var(--accent)}
 .filters{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .filters label{font-size:.75rem;color:var(--gray);font-weight:600}
 .filters select{border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer}
@@ -98,18 +105,30 @@ tr:last-child td{border-bottom:none}
   </div>
 </header>
 <div class="tabs">
-  <div class="tab active" data-tab="totais" onclick="showTab('totais')">Totais</div>
-  <div class="tab" data-tab="totais-cx" onclick="showTab('totais-cx')">Totais por CX</div>
-  <div class="tab" data-tab="performance" onclick="showTab('performance')">Performance</div>
-  <div class="tab" data-tab="perf-dest" onclick="showTab('perf-dest')">Perf. Destinatário</div>
-  <div class="tab" data-tab="resumo-dest" onclick="showTab('resumo-dest')">Resumo Destinatário</div>
-  <div class="tab" data-tab="barra-perf" onclick="showTab('barra-perf')">Barra Performance</div>
-  <div class="tab" data-tab="transito" onclick="showTab('transito')">🚚 Em Trânsito</div>
-  <div class="tab" data-tab="ocorrencias" onclick="showTab('ocorrencias')">⚠️ Ocorrências</div>
-  <div class="tab" data-tab="antecipadas" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
+  <div class="tgrp"><div class="tab tgrp-btn active" onclick="toggleMenu(this,event)">Resultados ▾</div>
+    <div class="tmenu">
+      <div class="tab active" data-tab="totais" onclick="showTab('totais')">Totais</div>
+      <div class="tab" data-tab="totais-cx" onclick="showTab('totais-cx')">Totais por CX</div>
+    </div></div>
+  <div class="tgrp"><div class="tab tgrp-btn" onclick="toggleMenu(this,event)">Performance ▾</div>
+    <div class="tmenu">
+      <div class="tab" data-tab="performance" onclick="showTab('performance')">Performance</div>
+      <div class="tab" data-tab="perf-dest" onclick="showTab('perf-dest')">Perf. Destinatário</div>
+      <div class="tab" data-tab="resumo-dest" onclick="showTab('resumo-dest')">Resumo Destinatário</div>
+      <div class="tab" data-tab="barra-perf" onclick="showTab('barra-perf')">Barra Performance</div>
+    </div></div>
+  <div class="tgrp"><div class="tab tgrp-btn" onclick="toggleMenu(this,event)">Operação ▾</div>
+    <div class="tmenu">
+      <div class="tab" data-tab="transito" onclick="showTab('transito')">🚚 Em Trânsito</div>
+      <div class="tab" data-tab="ocorrencias" onclick="showTab('ocorrencias')">⚠️ Ocorrências</div>
+      <div class="tab" data-tab="antecipadas" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
+    </div></div>
   <div class="tab" data-tab="statusnf" onclick="showTab('statusnf')">📄 Status NF</div>
-  <div class="tab" data-tab="expectativa" onclick="showTab('expectativa')">📊 Expectativa</div>
-  <div class="tab" data-tab="mapa" onclick="showTab('mapa')">🗺 Mapa</div>
+  <div class="tgrp"><div class="tab tgrp-btn" onclick="toggleMenu(this,event)">Análises ▾</div>
+    <div class="tmenu">
+      <div class="tab" data-tab="expectativa" onclick="showTab('expectativa')">📊 Expectativa</div>
+      <div class="tab" data-tab="mapa" onclick="showTab('mapa')">🗺 Mapa</div>
+    </div></div>
   <div style="position:relative;margin-left:auto;display:flex;align-items:center;gap:2px">
     <button id="btn-atualizar-agora" class="tab" type="button" style="border:0;background:transparent;cursor:pointer;font:inherit" title="Dispara a extração do portal agora, sem esperar o próximo horário programado (06h/12h/18h/23h59)">🔄 Atualizar Agora</button>
     <button id="btn-gear-atualizar" type="button" title="Configurar token de atualização" style="border:0;background:transparent;color:rgba(255,255,255,.65);cursor:pointer;padding:4px 8px;font-size:.9rem">⚙</button>
@@ -3010,6 +3029,14 @@ async function renderMapa() {
 }
 
 // --- TAB SWITCH ---
+function toggleMenu(el, ev) {
+  ev.stopPropagation();
+  const g = el.parentElement, abrir = !g.classList.contains('open');
+  document.querySelectorAll('.tgrp.open').forEach(x=>x.classList.remove('open'));
+  if (abrir) g.classList.add('open');
+}
+document.addEventListener('click', () => document.querySelectorAll('.tgrp.open').forEach(x=>x.classList.remove('open')));
+
 function showTab(id) {
   const btn = document.querySelector('.tab[data-tab="'+id+'"]');
   const conteudo = document.getElementById('tab-'+id);
@@ -3017,6 +3044,7 @@ function showTab(id) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
   btn.classList.add('active');
+  const grp = btn.closest('.tgrp'); if (grp) { grp.querySelector('.tgrp-btn').classList.add('active'); grp.classList.remove('open'); }
   conteudo.classList.add('active');
   // Hide global filters on tabs that have their own filter row (nao usam Ano/Mes/etc.)
   document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf') ? 'none' : 'flex';
