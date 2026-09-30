@@ -335,6 +335,30 @@ def build_rows(df, hoje=None):
     return rows
 
 
+def build_ocorrencias_historico(rows, historico_anterior):
+    """O Brudam so entrega a ultima ocorrencia de cada minuta
+    (DESCRICAO_ULTIMO, sobrescrita a cada rodada) -- sem historico
+    proprio na fonte. Essa funcao constroi o historico do lado da
+    PortoEx: compara a ocorrencia atual de cada minuta com a ultima
+    conhecida (guardada em historico_anterior) e so acrescenta um
+    registro novo quando ela mudou (ou e a primeira vez que a minuta
+    aparece com uma ocorrencia nao vazia) -- assim nao perde o registro
+    quando o Brudam atualizar/substituir a ocorrencia. Formato:
+    {"<MINUTA>": [{"descricao": "135 - MATERIAL RECUSADO PELO CLIENTE",
+    "detectado_em": "30/09/2026 15:00"}, ...]}."""
+    agora = datetime.now().strftime('%d/%m/%Y %H:%M')
+    historico = {m: list(v) for m, v in historico_anterior.items()}
+    for r in rows:
+        desc = r['DESCRICAO_ULTIMO']
+        if not desc:
+            continue
+        minuta = r['MINUTA']
+        anteriores = historico.get(minuta, [])
+        if not anteriores or anteriores[-1]['descricao'] != desc:
+            historico[minuta] = anteriores + [{'descricao': desc, 'detectado_em': agora}]
+    return historico
+
+
 def build_raw(rows, gerado_em=None):
     meses = sorted(set(r['MES'] for r in rows))
     tipos = sorted(set(r['TIPO EMISSÃO'] for r in rows))
@@ -399,6 +423,17 @@ def main():
     index_content = index_path.read_text(encoding='utf-8')
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = replace_json_blob(index_content, 'const RAW = ', raw_json)
+
+    # Historico de ocorrencias (ver build_ocorrencias_historico) -- guardado
+    # tambem solto no repo (nao so no blob do index.html) pra sobreviver
+    # mesmo se o blob for reconstruido do zero num passo futuro.
+    hist_path = dash_dir / 'ocorrencias_historico.json'
+    historico_anterior = json.loads(hist_path.read_text(encoding='utf-8')) if hist_path.exists() else {}
+    historico = build_ocorrencias_historico(rows, historico_anterior)
+    hist_path.write_text(json.dumps(historico, ensure_ascii=False), encoding='utf-8')
+    index_content = replace_json_blob(index_content, 'const OCORRENCIAS_HIST = ', json.dumps(historico, ensure_ascii=False))
+    print(f'Atualizado: {hist_path} ({sum(len(v) for v in historico.values())} eventos em {len(historico)} minutas)')
+
     index_path.write_text(index_content, encoding='utf-8')
     print(f'Atualizado: {index_path}')
 

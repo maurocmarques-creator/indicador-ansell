@@ -424,6 +424,16 @@ def atualizar_html(xlsx_consolidado: Path, nf_status=None) -> bool:
     raw_json = json.dumps(raw, ensure_ascii=False)
     index_content = ad.replace_json_blob(index_content, "const RAW = ", raw_json)
 
+    # Historico de ocorrencias -- o Brudam so da a ultima (ver
+    # atualizar_dashboard.build_ocorrencias_historico), entao acumulamos
+    # aqui a cada rodada, tambem guardado solto no repo.
+    hist_path = REPO_DIR / "ocorrencias_historico.json"
+    historico_anterior = json.loads(hist_path.read_text(encoding="utf-8")) if hist_path.exists() else {}
+    historico = ad.build_ocorrencias_historico(rows, historico_anterior)
+    hist_path.write_text(json.dumps(historico, ensure_ascii=False), encoding="utf-8")
+    index_content = ad.replace_json_blob(index_content, "const OCORRENCIAS_HIST = ", json.dumps(historico, ensure_ascii=False))
+    log(f"ocorrencias_historico.json atualizado ({sum(len(v) for v in historico.values())} eventos em {len(historico)} minutas).")
+
     if nf_status is not None:
         nf_status_json = json.dumps(nf_status, ensure_ascii=False)
         index_content = ad.replace_json_blob(index_content, "const NF_STATUS = ", nf_status_json)
@@ -477,19 +487,20 @@ def limpar_desktop_ini_do_git():
 def commit_e_push(dados_mudaram: bool):
     limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
+    arquivos_rastreados = ["index.html", "em_transito.json", "nf_pendente.json", "ocorrencias_historico.json"]
     status = subprocess.run(
-        ["git", "status", "--porcelain", "index.html", "em_transito.json", "nf_pendente.json"],
+        ["git", "status", "--porcelain"] + arquivos_rastreados,
         cwd=REPO_DIR, capture_output=True, text=True,
     )
-    log(f"git status --porcelain index.html em_transito.json nf_pendente.json -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
+    log(f"git status --porcelain {' '.join(arquivos_rastreados)} -> rc={status.returncode} stdout={status.stdout!r} stderr={status.stderr!r}")
     if status.returncode != 0:
         log("git status falhou -- abortando commit desta rodada.")
         return
     if not status.stdout.strip():
-        log("Nada para commitar (index.html, em_transito.json e nf_pendente.json identicos ao publicado).")
+        log("Nada para commitar (arquivos rastreados identicos aos publicados).")
         return
 
-    subprocess.run(["git", "add", "index.html", "em_transito.json", "nf_pendente.json"], cwd=REPO_DIR, check=True)
+    subprocess.run(["git", "add"] + arquivos_rastreados, cwd=REPO_DIR, check=True)
     sufixo = "com dados novos" if dados_mudaram else "sem dados novos, so verificacao"
     mensagem = f"Atualizacao automatica ({sufixo}) — {date.today().isoformat()}"
     subprocess.run(["git", "commit", "-m", mensagem], cwd=REPO_DIR, check=True)
