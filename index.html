@@ -1815,7 +1815,11 @@ function exportarTransitoExcel() {
       'PREV. ENTREGA': fmtBR(r['PREV. ENTREGA']),
       'DATA DE AGENDAMENTO': fmtBR(r['DATA DE AGENDAMENTO']),
       'PRAZO EFETIVO': fmtBR(r._prazo),
-      [tipo==='fora' ? 'DIAS VENCIDOS' : 'DIAS RESTANTES']: r._dias===null ? '' : Math.abs(r._dias),
+      // Uma coluna so (nao mais "DIAS VENCIDOS"/"DIAS RESTANTES"
+      // separadas por tipo), pra fazer sentido numa aba unica com os
+      // dois grupos juntos: positivo = dias uteis vencidos, negativo =
+      // dias uteis restantes (mesmo sinal usado internamente na tela).
+      'DIAS (vencido+/restante-)': r._dias,
       'DESTINATARIO': r.EFF_LOCAL,
       'CIDADE': r.EFF_CIDADE,
       'UF': r.EFF_UF,
@@ -1826,11 +1830,15 @@ function exportarTransitoExcel() {
     };
   }
 
+  // Uma aba so com os dois grupos -- a coluna STATUS ja diferencia
+  // Fora/Dentro do Prazo, entao nao precisa mais de abas separadas.
+  const linhas = [
+    ...TRANSITO_EXPORT.fora.map(r=>linhaBruta(r,'fora')),
+    ...TRANSITO_EXPORT.dentro.map(r=>linhaBruta(r,'dentro')),
+  ];
   const wb = XLSX.utils.book_new();
-  const wsFora = XLSX.utils.json_to_sheet(TRANSITO_EXPORT.fora.map(r=>linhaBruta(r,'fora')));
-  const wsDentro = XLSX.utils.json_to_sheet(TRANSITO_EXPORT.dentro.map(r=>linhaBruta(r,'dentro')));
-  XLSX.utils.book_append_sheet(wb, wsFora, 'Fora do Prazo');
-  XLSX.utils.book_append_sheet(wb, wsDentro, 'Dentro do Prazo');
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  XLSX.utils.book_append_sheet(wb, ws, 'Em Transito');
 
   const hoje = new Date();
   const stamp = hoje.toISOString().slice(0,10);
