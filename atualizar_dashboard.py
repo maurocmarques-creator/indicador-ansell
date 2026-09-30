@@ -50,6 +50,23 @@ OBSERVACOES_TRANSITO = CONFIG.get("observacoes_transito", {})
 # Formato por minuta: {"motivo": "Pedido Divergente", "definido_em": "..."}
 MOTIVOS_OCORRENCIA = CONFIG.get("motivos_ocorrencia", {})
 
+# ID de Carregamento, vinculado manualmente por NF (nao por minuta) no
+# Mural ao importar a "Ordem de Coleta" do dia -- mesmo mecanismo de
+# sincronizacao que MOTIVOS_OCORRENCIA. Chave = numero da NF (string).
+ID_CARREGAMENTO_POR_NF = CONFIG.get("id_carregamento", {})
+
+
+def _id_carregamento_da_linha(nf_doc):
+    """Uma minuta pode ter mais de uma NF na mesma celula (separadas por
+    virgula) -- usa o ID de Carregamento da primeira NF que bater no
+    mapa (na pratica todas as NFs de uma minuta viajam no mesmo
+    carregamento, entao nao deveria haver conflito real)."""
+    for nf in str(nf_doc or '').split(','):
+        nf = nf.strip()
+        if nf in ID_CARREGAMENTO_POR_NF:
+            return ID_CARREGAMENTO_POR_NF[nf]
+    return ''
+
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
     'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste',
@@ -336,6 +353,7 @@ def build_rows(df, hoje=None):
             'DESCRICAO_ULTIMO': descricao_ultimo,
             'OBSERVACOES': OBSERVACOES_TRANSITO.get(minuta, []),
             'MOTIVO_OCORRENCIA': MOTIVOS_OCORRENCIA.get(minuta, {}).get('motivo', ''),
+            'ID_CARREGAMENTO': _id_carregamento_da_linha(r['NF/DOC']),
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': coord[0] if coord else None,

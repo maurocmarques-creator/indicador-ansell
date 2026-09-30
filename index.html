@@ -461,12 +461,20 @@ tr:last-child td{border-bottom:none}
         </select>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">ID Carregamento</label>
+        <select id="nf-f-idc" onchange="renderStatusNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="com">Com ID</option>
+          <option value="sem">Sem ID</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
         <label style="font-size:.75rem;color:var(--gray);font-weight:600">Mês <span style="font-weight:400">(Recebimento)</span></label>
         <select id="nf-f-mes" onchange="renderStatusNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todos</option></select>
       </div>
       <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:220px">
         <label style="font-size:.75rem;color:var(--gray);font-weight:600">Buscar</label>
-        <input id="nf-f-busca" type="text" placeholder="Minuta, CT-e ou NF..." oninput="renderStatusNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;width:100%;box-sizing:border-box">
+        <input id="nf-f-busca" type="text" placeholder="Minuta, CT-e, NF ou ID de carregamento..." oninput="renderStatusNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;width:100%;box-sizing:border-box">
       </div>
     </div>
     <table>
@@ -2285,6 +2293,9 @@ function renderStatusNF() {
 
   let filtradas = base;
   if (status) filtradas = filtradas.filter(r => r.coletada === status);
+  const fIdc = document.getElementById('nf-f-idc').value;
+  if (fIdc==='com') filtradas = filtradas.filter(r => r.id_carregamento);
+  else if (fIdc==='sem') filtradas = filtradas.filter(r => !r.id_carregamento);
   if (busca) filtradas = filtradas.filter(r => (r.minuta+' '+r.cte+' '+r.nf+' '+(r.id_carregamento||'')).toLowerCase().includes(busca));
 
   const LIMITE = 500;

@@ -342,6 +342,7 @@ def extrair_status_nf(usuario, senha, data_ini, data_fim, pasta_tmp: Path):
                 "cidade_entrega": str(r.get("CIDADE ENTREGA", "")),
                 "uf_entrega": str(r.get("UF ENTREGA", "")),
                 "coletada": str(r["Coletada"]),
+                "id_carregamento": ad.ID_CARREGAMENTO_POR_NF.get(str(r["NF/DOC"]), ""),
             }
 
         nf_status = []
