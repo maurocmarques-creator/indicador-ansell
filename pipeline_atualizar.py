@@ -445,6 +445,14 @@ def atualizar_html(xlsx_consolidado: Path, nf_status=None) -> bool:
 
     log("index.html atualizado.")
 
+    # ocorrencias_problema.json -- minutas que ja tiveram ocorrencia-problema
+    # (mesmo que resolvida depois), publicada solta no repo pro Mural
+    # mostrar e o time marcar o motivo -- inclui minutas fora de transito.
+    ocorrencias_problema = ad.build_ocorrencias_problema(rows, historico)
+    ocorrencias_problema_path = REPO_DIR / "ocorrencias_problema.json"
+    ocorrencias_problema_path.write_text(json.dumps(ocorrencias_problema, ensure_ascii=False), encoding="utf-8")
+    log(f"ocorrencias_problema.json atualizado ({len(ocorrencias_problema)} minutas).")
+
     # em_transito.json -- lista das minutas ainda em transito, publicada
     # solta no repo pra o Mural buscar ao vivo (fetch direto do GitHub a
     # cada carregamento). Assim, quando uma minuta e entregue e sai
@@ -487,7 +495,7 @@ def limpar_desktop_ini_do_git():
 def commit_e_push(dados_mudaram: bool):
     limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
-    arquivos_rastreados = ["index.html", "em_transito.json", "nf_pendente.json", "ocorrencias_historico.json"]
+    arquivos_rastreados = ["index.html", "em_transito.json", "nf_pendente.json", "ocorrencias_historico.json", "ocorrencias_problema.json"]
     status = subprocess.run(
         ["git", "status", "--porcelain"] + arquivos_rastreados,
         cwd=REPO_DIR, capture_output=True, text=True,

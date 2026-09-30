@@ -42,6 +42,14 @@ DATE_OVERRIDES = CONFIG.get("date_overrides", {})
 #   [{"autor": "Nome", "texto": "...", "data": "17/09/2026 14:30"}, ...]
 OBSERVACOES_TRANSITO = CONFIG.get("observacoes_transito", {})
 
+# Motivo da ocorrencia (ex.: "Pedido Divergente", "Nota Fiscal em
+# Desacordo-Preco Incorreto"), marcado manualmente pelo time PortoEx no
+# Mural -- um motivo por MINUTA (nao por evento/volume), cobrindo a
+# ocorrencia-problema mais recente dela. Mesmo mecanismo de sincronizacao
+# que OBSERVACOES_TRANSITO (Mural -> cliente_config.json -> aqui).
+# Formato por minuta: {"motivo": "Pedido Divergente", "definido_em": "..."}
+MOTIVOS_OCORRENCIA = CONFIG.get("motivos_ocorrencia", {})
+
 UF_REGIAO = {
     'AC': 'Norte', 'AP': 'Norte', 'AM': 'Norte', 'PA': 'Norte', 'RO': 'Norte', 'RR': 'Norte', 'TO': 'Norte',
     'AL': 'Nordeste', 'BA': 'Nordeste', 'CE': 'Nordeste', 'MA': 'Nordeste', 'PB': 'Nordeste',
@@ -327,12 +335,58 @@ def build_rows(df, hoje=None):
             'EFF_CIDADE': eff_cidade,
             'DESCRICAO_ULTIMO': descricao_ultimo,
             'OBSERVACOES': OBSERVACOES_TRANSITO.get(minuta, []),
+            'MOTIVO_OCORRENCIA': MOTIVOS_OCORRENCIA.get(minuta, {}).get('motivo', ''),
             'EFF_UF': eff_uf,
             'REGIAO': UF_REGIAO.get(eff_uf, ''),
             'LAT': coord[0] if coord else None,
             'LNG': coord[1] if coord else None,
         })
     return rows
+
+
+# Espelho do CODIGOS_OCORRENCIA_PROBLEMA em index.html (funcao JS
+# isOcorrenciaProblema, aba Ocorrencias) -- mantido em sincronia manual
+# porque o Python nao pode chamar o JS. Se adicionar/remover um codigo
+# num lado, adicionar no outro tambem.
+CODIGOS_OCORRENCIA_PROBLEMA = {'135', '713', '23', '667', '170', '10060', '26', '2'}
+
+
+def _e_ocorrencia_problema(descricao):
+    codigo = str(descricao or '').split(' - ')[0].strip()
+    return codigo in CODIGOS_OCORRENCIA_PROBLEMA
+
+
+def _ultima_ocorrencia_problema(historico_minuta):
+    """Ultimo evento de ocorrencia-problema (ignora marcos de rotina) no
+    historico de uma minuta, ou None se ela nunca teve nenhum."""
+    for evento in reversed(historico_minuta):
+        if _e_ocorrencia_problema(evento['descricao']):
+            return evento
+    return None
+
+
+def build_ocorrencias_problema(rows, historico):
+    """Lista (achatada, uma linha por minuta) das minutas que ja tiveram
+    alguma ocorrencia-problema (mesmo que resolvida/substituida depois),
+    para o Mural mostrar e o time marcar o motivo -- inclui minutas que
+    ja sairam de 'Em Transito', ao contrario de em_transito.json."""
+    resultado = []
+    for r in rows:
+        ultimo = _ultima_ocorrencia_problema(historico.get(r['MINUTA'], []))
+        if not ultimo:
+            continue
+        resultado.append({
+            'minuta': r['MINUTA'],
+            'nf': r['NF_DOC'],
+            'cliente': r['CLIENTE'],
+            'destinatario': r['EFF_LOCAL'],
+            'cidade': r['EFF_CIDADE'],
+            'uf': r['EFF_UF'],
+            'redespacho': r['REDESPACHO'],
+            'descricao': ultimo['descricao'],
+            'detectado_em': ultimo['detectado_em'],
+        })
+    return resultado
 
 
 def build_ocorrencias_historico(rows, historico_anterior):
@@ -436,6 +490,15 @@ def main():
 
     index_path.write_text(index_content, encoding='utf-8')
     print(f'Atualizado: {index_path}')
+
+    # ocorrencias_problema.json -- minutas que ja tiveram ocorrencia-problema
+    # (mesmo que ja resolvida), publicada solta no repo pro Mural buscar e
+    # o time marcar o motivo -- mesmo padrao do em_transito.json, mas sem
+    # se limitar as minutas ainda em transito.
+    ocorrencias_problema = build_ocorrencias_problema(rows, historico)
+    ocorrencias_problema_path = dash_dir / 'ocorrencias_problema.json'
+    ocorrencias_problema_path.write_text(json.dumps(ocorrencias_problema, ensure_ascii=False), encoding='utf-8')
+    print(f'Atualizado: {ocorrencias_problema_path} ({len(ocorrencias_problema)} minutas)')
 
     # em_transito.json -- lista das minutas ainda em transito (mesmo
     # criterio da aba "Em Transito" do dashboard), publicada solta no
