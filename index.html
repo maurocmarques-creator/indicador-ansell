@@ -123,7 +123,11 @@ tr:last-child td{border-bottom:none}
       <div class="tab" data-tab="ocorrencias" onclick="showTab('ocorrencias')">⚠️ Ocorrências</div>
       <div class="tab" data-tab="antecipadas" onclick="showTab('antecipadas')">🚀 Entregas Antecipadas</div>
     </div></div>
-  <div class="tab" data-tab="statusnf" onclick="showTab('statusnf')">📄 Status NF</div>
+  <div class="tgrp"><div class="tab tgrp-btn" onclick="toggleMenu(this,event)">📄 Status Nota Fiscal ▾</div>
+    <div class="tmenu">
+      <div class="tab" data-tab="statusnf" onclick="showTab('statusnf')">Confirmação de Coleta</div>
+      <div class="tab" data-tab="posicaonf" onclick="showTab('posicaonf')">Posição NF</div>
+    </div></div>
   <div class="tgrp"><div class="tab tgrp-btn" onclick="toggleMenu(this,event)">Análises ▾</div>
     <div class="tmenu">
       <div class="tab" data-tab="expectativa" onclick="showTab('expectativa')">📊 Expectativa</div>
@@ -515,6 +519,54 @@ tr:last-child td{border-bottom:none}
       <tbody id="tb-nf-status"></tbody>
     </table>
     <p id="nf-status-aviso" style="font-size:.75rem;color:#64748b;margin-top:8px"></p>
+  </div>
+</div>
+
+<!-- TAB: POSICAO NF -->
+<div id="tab-posicaonf" class="content">
+  <p style="font-size:.78rem;color:#64748b;margin:0 0 14px">Todas as notas fiscais da tela <b>Confirmação de Coleta</b>, com a <b>situação da entrega</b> e a <b>última ocorrência</b> registrada na minuta. Notas sem minuta no relatório de emissões ficam com esses dois campos em branco (—).</p>
+  <div class="table-card">
+    <h3>Posição por Nota Fiscal</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-end">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Cliente</label>
+        <select id="pn-f-cliente" onchange="renderPosicaoNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todos</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Status</label>
+        <select id="pn-f-status" onchange="renderPosicaoNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="Coletado">Coletado</option>
+          <option value="NF Recebida e Não Coletado">NF Recebida e Não Coletado</option>
+          <option value="Não Coletado">Não Coletado</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">ID Carregamento</label>
+        <select id="pn-f-idc" onchange="renderPosicaoNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer">
+          <option value="">Todos</option>
+          <option value="com">Com ID</option>
+          <option value="sem">Sem ID</option>
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Mês <span style="font-weight:400">(Recebimento)</span></label>
+        <select id="pn-f-mes" onchange="renderPosicaoNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todos</option></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:220px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Buscar</label>
+        <input id="pn-f-busca" type="text" placeholder="Minuta, CT-e, NF ou ID de carregamento..." oninput="renderPosicaoNF()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;width:100%;box-sizing:border-box">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">&nbsp;</label>
+        <button onclick="exportarPosicaoNFExcel()" style="white-space:nowrap;border:1px solid var(--border);border-radius:6px;padding:7px 14px;font-size:.8rem;font-weight:600;color:#166534;background:#f0fdf4;cursor:pointer">⬇ Exportar Excel</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Minuta</th><th>CT-e</th><th>NF</th><th>ID de Carregamento</th><th>Data NF</th><th>Data Recebimento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF Destino</th><th>Redespacho</th><th>Status CT-e</th><th>Coletada</th><th>Situação da Entrega</th><th>Última Ocorrência</th></tr></thead>
+      <tbody id="tb-posicao-nf"></tbody>
+    </table>
+    <p id="pn-aviso" style="font-size:.75rem;color:#64748b;margin-top:8px"></p>
   </div>
 </div>
 
@@ -2439,6 +2491,124 @@ function exportarStatusNFExcel() {
   XLSX.writeFile(wb, `status_nf_${stamp}.xlsx`);
 }
 
+// --- POSICAO NF ---
+// Mesmas notas da aba Confirmacao de Coleta (NF_STATUS), cada uma com a
+// situacao da entrega (STATUS) e a ultima ocorrencia (DESCRICAO_ULTIMO)
+// da minuta correspondente em RAW. Nota sem minuta em RAW fica com os
+// dois campos em branco.
+function _posicaoNfLinhas() {
+  const porMinuta = new Map();
+  allRows.forEach(r => { if (!porMinuta.has(r.MINUTA)) porMinuta.set(r.MINUTA, r); });
+  return NF_STATUS.map(n => {
+    const r = porMinuta.get(n.minuta);
+    return {...n, situacao: r ? r.STATUS : '', ultima_ocorrencia: r ? (r.DESCRICAO_ULTIMO || '') : ''};
+  });
+}
+
+function renderPosicaoNF() {
+  const todas = _posicaoNfLinhas();
+  const fCliente = document.getElementById('pn-f-cliente');
+  if (fCliente.options.length <= 1) {
+    const clientes = [...new Set(todas.map(r=>r.cliente).filter(Boolean))].sort();
+    clientes.forEach(c => { const o = document.createElement('option'); o.value = c; o.text = c; fCliente.add(o); });
+  }
+  const fMes = document.getElementById('pn-f-mes');
+  if (fMes.options.length <= 1) {
+    const MES_ABREV_NF = {'01':'Jan','02':'Fev','03':'Mar','04':'Abr','05':'Mai','06':'Jun','07':'Jul','08':'Ago','09':'Set','10':'Out','11':'Nov','12':'Dez'};
+    const meses = [...new Set(todas.map(r=>(r.data_recebimento||'').slice(0,7)).filter(Boolean))].sort();
+    meses.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m;
+      const [y,mm] = m.split('-');
+      o.text = (MES_ABREV_NF[mm]||mm)+'/'+y;
+      fMes.add(o);
+    });
+  }
+  const cliente = fCliente.value;
+  const status = document.getElementById('pn-f-status').value;
+  const mes = fMes.value;
+  const fIdc = document.getElementById('pn-f-idc').value;
+  const busca = document.getElementById('pn-f-busca').value.trim().toLowerCase();
+
+  let filtradas = todas.filter(r =>
+    (!cliente || r.cliente === cliente) &&
+    (!mes || (r.data_recebimento||'').startsWith(mes)) &&
+    (!status || r.coletada === status)
+  );
+  if (fIdc==='com') filtradas = filtradas.filter(r => r.id_carregamento);
+  else if (fIdc==='sem') filtradas = filtradas.filter(r => !r.id_carregamento);
+  if (busca) filtradas = filtradas.filter(r => (r.minuta+' '+r.cte+' '+r.nf+' '+(r.id_carregamento||'')).toLowerCase().includes(busca));
+
+  // Guardado antes do corte de exibicao (LIMITE), pro Excel levar 100%.
+  POSICAONF_EXPORT = filtradas;
+
+  const LIMITE = 500;
+  const mostrar = filtradas.slice(0, LIMITE);
+  const corColetada = c => c==='Coletado' ? '#166534' : c==='Não Coletado' ? '#991b1b' : '#92400e';
+  const corSituacao = s => s==='NO PRAZO' ? '#166534' : (s==='EM ATRASO' || s==='EM TRANSITO FORA DO PRAZO') ? '#991b1b' : '#64748b';
+  const fmtNfData = iso => {
+    if (!iso) return '—';
+    const [y,m,d] = iso.split('-');
+    return d+'/'+m+'/'+y;
+  };
+  const cidadeUf = (cidade, uf) => cidade ? cidade+(uf?'/'+uf:'') : (uf||'—');
+  const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  document.getElementById('tb-posicao-nf').innerHTML = mostrar.length
+    ? mostrar.map(r => `<tr>
+        <td>${esc(r.minuta)||'—'}</td>
+        <td>${esc(r.cte)||'—'}</td>
+        <td>${esc(r.nf)||'—'}</td>
+        <td>${esc(r.id_carregamento)||'—'}</td>
+        <td>${fmtNfData(r.nf_data)}</td>
+        <td>${fmtNfData(r.data_recebimento)}</td>
+        <td>${esc(r.cliente)||'—'}</td>
+        <td>${esc(r.destino)||'—'}</td>
+        <td>${esc(cidadeUf(r.cidade_destino, r.uf_destino))}</td>
+        <td>${esc(r.local_entrega)||'—'}</td>
+        <td>${esc(r.status_cte)||'—'}</td>
+        <td style="color:${corColetada(r.coletada)};font-weight:600">${esc(r.coletada)}</td>
+        <td style="color:${corSituacao(r.situacao)};font-weight:600">${esc(r.situacao)||'—'}</td>
+        <td>${esc(r.ultima_ocorrencia)||'—'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="14" style="text-align:center;color:#64748b;padding:12px">Nenhum resultado para os filtros selecionados</td></tr>';
+
+  document.getElementById('pn-aviso').textContent = filtradas.length > LIMITE
+    ? `Mostrando ${LIMITE} de ${filtradas.length.toLocaleString('pt-BR')} resultados — refine a busca ou o filtro pra ver as demais linhas (o Excel leva todas).`
+    : `${filtradas.length.toLocaleString('pt-BR')} resultado(s).`;
+}
+
+function exportarPosicaoNFExcel() {
+  function fmtBR(iso) {
+    if (!iso) return '';
+    const [y,m,d] = iso.split('-');
+    return d+'/'+m+'/'+y;
+  }
+  // POSICAONF_EXPORT e o filtrado completo (ver renderPosicaoNF), de
+  // antes do corte de exibicao -- o Excel leva 100% das linhas filtradas.
+  const linhas = POSICAONF_EXPORT.map(r => ({
+    'MINUTA': r.minuta,
+    'CT-e': r.cte,
+    'NF': r.nf,
+    'ID DE CARREGAMENTO': r.id_carregamento||'',
+    'DATA NF': fmtBR(r.nf_data),
+    'DATA RECEBIMENTO': fmtBR(r.data_recebimento),
+    'CLIENTE': r.cliente,
+    'DESTINATARIO': r.destino,
+    'CIDADE DESTINO': r.cidade_destino,
+    'UF DESTINO': r.uf_destino,
+    'LOCAL ENTREGA': r.local_entrega||'',
+    'STATUS CT-e': r.status_cte,
+    'COLETADA': r.coletada,
+    'SITUACAO DA ENTREGA': r.situacao||'',
+    'ULTIMA OCORRENCIA': r.ultima_ocorrencia||'',
+  }));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  XLSX.utils.book_append_sheet(wb, ws, 'Posicao NF');
+  XLSX.writeFile(wb, `posicao_nf_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
 // --- EXPECTATIVA ---
 function setExpCliente(cli) {
   _expCliente = cli;
@@ -2770,6 +2940,7 @@ let _mapaZoomUf = null; // null = Brasil inteiro; 'SP' etc. = zoom num estado
 let _mapFullscreen = false; // modo "tela cheia" (overlay via CSS, nao a Fullscreen API do navegador)
 let TRANSITO_EXPORT = { fora: [], dentro: [] };
 let STATUSNF_EXPORT = [];
+let POSICAONF_EXPORT = [];
 
 // "Tela cheia" e um overlay (position:fixed cobrindo a tela) em vez da
 // Fullscreen API do navegador -- mais simples e funciona em qualquer
@@ -3114,13 +3285,14 @@ function showTab(id) {
   const grp = btn.closest('.tgrp'); if (grp) { grp.querySelector('.tgrp-btn').classList.add('active'); grp.classList.remove('open'); }
   conteudo.classList.add('active');
   // Hide global filters on tabs that have their own filter row (nao usam Ano/Mes/etc.)
-  document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf') ? 'none' : 'flex';
+  document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf' || id === 'posicaonf') ? 'none' : 'flex';
   if (id === 'mapa') renderMapa();
   if (id === 'expectativa') renderExpectativa();
   if (id === 'transito') renderTransito();
   if (id === 'ocorrencias') renderOcorrencias();
   if (id === 'antecipadas') renderAntecipadas();
   if (id === 'statusnf') renderStatusNF();
+  if (id === 'posicaonf') renderPosicaoNF();
   // Guarda a aba atual no # da URL, sem recarregar a pagina -- assim, ao
   // atualizar (F5) ou reabrir o link, volta pra mesma aba em vez de ir
   // sempre pra "Totais". Nao muda nada no servidor/hospedagem.
