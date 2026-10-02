@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Tabela Comercial — PortoEx</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>window.ACESSO_SO_COMERCIAL = true; window.COMERCIAL_PAGINA_PROPRIA = true;</script>
+<script src="acesso.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="comercial.css">
+<style>
+  :root { --primary: #1a3a5c; --border: #e2e8f0; --gray: #64748b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f1f5f9; color: #1e293b; }
+  header { background: var(--primary); color: #fff; padding: 14px 24px; }
+  header h1 { margin: 0; font-size: 1.05rem; }
+  header small { opacity: .7; font-size: .76rem; }
+  .tabs { background: var(--primary); display: flex; align-items: center; padding: 0 18px; border-top: 1px solid rgba(255,255,255,.12); }
+  .tab { color: #fff; padding: 11px 18px; font-size: .86rem; cursor: pointer; border-bottom: 3px solid transparent; opacity: .8; }
+  .tab:hover { opacity: 1; }
+  .tab.active { opacity: 1; border-bottom-color: #fff; font-weight: 600; }
+  #acesso-user { margin-left: auto; }
+  .content { display: none; padding: 20px 24px; max-width: 1280px; margin: 0 auto; }
+  .content.active { display: block; }
+</style>
+</head>
+<body>
+<header><h1>Tabela Comercial</h1><small>PortoEx</small></header>
+<div class="tabs">
+  <div class="tab active" data-tab="tabcomercial" onclick="showTab('tabcomercial')">Tabela Comercial</div>
+  <div class="tab" data-tab="simulacaocusto" onclick="showTab('simulacaocusto')">Simulação Custo</div>
+</div>
+<div id="tab-tabcomercial" class="content active"></div>
+<div id="tab-simulacaocusto" class="content"></div>
+<script src="comercial.js"></script>
+<script>
+  function showTab(id) {
+    const btn = document.querySelector('.tab[data-tab="' + id + '"]');
+    if (!btn) return;
+    if (window.ACESSO && !ACESSO.podeAbrir(id)) return;
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === btn));
+    document.querySelectorAll('.content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + id));
+    window.comercialAbrir(id === 'tabcomercial' ? 'tabelas' : 'simulacao');
+  }
+  // so abre depois do login validar (acesso.js remove o bloqueio de tela)
+  (function aguardarAcesso() {
+    if (window.ACESSO && ACESSO.pronto) showTab(location.hash === '#simulacaocusto' ? 'simulacaocusto' : 'tabcomercial');
+    else setTimeout(aguardarAcesso, 150);
+  })();
+</script>
+</body>
+</html>
