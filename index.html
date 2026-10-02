@@ -372,6 +372,10 @@ tr:last-child td{border-bottom:none}
         <label style="font-size:.75rem;color:var(--gray);font-weight:600">Descrição</label>
         <select id="ft-desc" onchange="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;color:#1e293b;background:#fff;cursor:pointer"><option value="">Todas</option></select>
       </div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Nota Fiscal</label>
+        <input id="ft-nf" type="text" placeholder="Buscar NF..." oninput="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;width:160px;box-sizing:border-box">
+      </div>
     </div>
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>ID de Carregamento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Vencidos</th><th>Descrição</th></tr></thead>
@@ -380,6 +384,12 @@ tr:last-child td{border-bottom:none}
   </div>
   <div class="table-card">
     <h3>Dentro do Prazo <span class="tag-filtro">(Prev. Entrega)</span></h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <label style="font-size:.75rem;color:var(--gray);font-weight:600">Nota Fiscal</label>
+        <input id="dt-nf" type="text" placeholder="Buscar NF..." oninput="renderTransito()" style="border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:.8rem;width:160px;box-sizing:border-box">
+      </div>
+    </div>
     <table>
       <thead><tr><th>Minuta</th><th>NF</th><th>ID de Carregamento</th><th>Cliente</th><th>Destinatário</th><th>Cidade/UF</th><th>Redespacho</th><th>Emissão</th><th>Prazo</th><th>Dias Restantes</th><th>Descrição</th></tr></thead>
       <tbody id="tb-transito-dentro"></tbody>
@@ -1868,21 +1878,29 @@ function renderTransito() {
   popularSelect('ft-cidade', fora.map(cidadeUf), fCidade);
   popularSelect('ft-desc', fora.map(r=>r.DESCRICAO_ULTIMO), fDesc);
 
+  // Busca por nota fiscal: NF_DOC pode ter varias notas na mesma celula
+  // ("30296,30274,908"), entao compara por trecho (substring), nao igualdade.
+  const matchNf = (r, termo) => !termo || String(r.NF_DOC||'').toLowerCase().includes(termo);
+  const fNf = document.getElementById('ft-nf').value.trim().toLowerCase();
+  const dNf = document.getElementById('dt-nf').value.trim().toLowerCase();
+
   const foraFiltrado = fora.filter(r =>
     (!fCliente || r.CLIENTE===fCliente) &&
     (!fDest || r.EFF_LOCAL===fDest) &&
     (!fCidade || cidadeUf(r)===fCidade) &&
-    (!fDesc || r.DESCRICAO_ULTIMO===fDesc)
+    (!fDesc || r.DESCRICAO_ULTIMO===fDesc) &&
+    matchNf(r, fNf)
   );
+  const dentroFiltrado = dentro.filter(r => matchNf(r, dNf));
 
   document.getElementById('tb-transito-fora').innerHTML = foraFiltrado.length
     ? foraFiltrado.map(r=>rowHtml(r,'fora')).join('')
     : `<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">${fora.length ? 'Nenhum resultado para os filtros selecionados' : 'Nenhuma entrega fora do prazo 🎉'}</td></tr>`;
-  document.getElementById('tb-transito-dentro').innerHTML = dentro.length
-    ? dentro.map(r=>rowHtml(r,'dentro')).join('')
-    : '<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">Nenhuma entrega em trânsito dentro do prazo</td></tr>';
+  document.getElementById('tb-transito-dentro').innerHTML = dentroFiltrado.length
+    ? dentroFiltrado.map(r=>rowHtml(r,'dentro')).join('')
+    : `<tr><td colspan="11" style="text-align:center;color:#64748b;padding:12px">${dentro.length ? 'Nenhum resultado para a nota fiscal buscada' : 'Nenhuma entrega em trânsito dentro do prazo'}</td></tr>`;
 
-  TRANSITO_EXPORT = { fora: foraFiltrado, dentro: dentro };
+  TRANSITO_EXPORT = { fora: foraFiltrado, dentro: dentroFiltrado };
 }
 
 function exportarTransitoExcel() {
