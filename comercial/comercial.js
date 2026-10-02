@@ -9,6 +9,7 @@
   const SUPABASE_URL = 'https://fydoatntynvcwudxkhqv.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_lXegUG6Ry1uZI3lqnbKyQg_lv-Ivzv6';
   const STATUS_LISTA = ['Enviada - aguardando aprovação', 'Em negociação', 'Aprovada', 'Reprovada'];
+  const STATUS_CONVIDADO = ['Em negociação', 'Aprovada', 'Reprovada'];
   const LIMITE_LINHAS = 500;
 
   let _cli = null;
@@ -225,7 +226,6 @@
     const t = await cli().from('comercial_tabelas').select('id,nome,arquivo_origem,criada_em,criada_por_nome,vigente').order('criada_em', { ascending: false });
     if (t.error) throw t.error;
     S.tabelas = t.data || [];
-    if (S.leitura) { S.ultStatus = {}; return; }
     const h = await cli().from('comercial_historico').select('tabela_id,status,autor_nome,criado_em').not('status', 'is', null).order('criado_em', { ascending: false });
     if (h.error) throw h.error;
     S.ultStatus = {};
@@ -250,12 +250,12 @@
       <td><b>${esc(t.nome)}</b>${t.arquivo_origem ? `<div style="font-size:.7rem;color:#94a3b8">${esc(t.arquivo_origem)}</div>` : ''}</td>
       <td>${fmtDH(t.criada_em)}</td><td>${esc(t.criada_por_nome || '—')}</td>
       <td>${badgeStatus(t.id)}</td>
-      <td>${t.vigente ? '<span class="cm-badge cm-b-vig">VIGENTE</span>' : `<button class="cm-btn peq" data-act="vigente-t" data-id="${t.id}">Marcar como vigente</button>`}</td>
+      <td>${t.vigente ? '<span class="cm-badge cm-b-vig">VIGENTE</span>' : (S.leitura ? '—' : `<button class="cm-btn peq" data-act="vigente-t" data-id="${t.id}">Marcar como vigente</button>`)}</td>
       <td><button class="cm-btn peq" data-act="abrir-t" data-id="${t.id}">Abrir</button></td></tr>`).join('');
     return `<div class="cm-card"><div class="cm-topo" style="margin-bottom:10px"><h3 style="margin:0">Tabelas comerciais</h3>
-      <button class="cm-btn prim" data-act="nova-t">+ Nova Tabela</button></div>
+      ${S.leitura ? '' : '<button class="cm-btn prim" data-act="nova-t">+ Nova Tabela</button>'}</div>
       ${S.tabelas.length ? `<div class="cm-scroll"><table class="cm-tabela"><thead><tr><th>Nome</th><th>Criada em</th><th>Criada por</th><th>Status</th><th>Vigente</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>`
-        : '<div class="cm-vazio">Nenhuma tabela ainda. Clique em "+ Nova Tabela" e anexe o Excel.</div>'}</div>`;
+        : `<div class="cm-vazio">${S.leitura ? 'Nenhuma tabela disponível no momento.' : 'Nenhuma tabela ainda. Clique em "+ Nova Tabela" e anexe o Excel.'}</div>`}</div>`;
   }
 
   function iniciarRev(n) {
@@ -328,7 +328,7 @@
     const sub = (id, nome) => `<button class="${S.subaba === id ? 'ativo' : ''}" data-act="sub" data-sub="${id}">${nome}</button>`;
     return `<div class="cm-card"><div class="cm-topo" style="margin-bottom:0"><h3 style="margin:0">${esc(t.nome)} ${t.vigente ? '<span class="cm-badge cm-b-vig">VIGENTE</span>' : ''}</h3>
       <div style="font-size:.76rem;color:#64748b">Criada em ${fmtDH(t.criada_em)} por ${esc(t.criada_por_nome || '—')}</div></div>
-      <div class="cm-sub">${S.leitura ? '' : sub('historico', 'Histórico / Status')}${sub('tarifas', 'Tarifas')}</div>
+      <div class="cm-sub">${sub('historico', 'Histórico / Status')}${sub('tarifas', 'Tarifas')}</div>
       <div id="cm-corpo-t"></div></div>`;
   }
 
@@ -336,12 +336,12 @@
     const msgs = S.msgs.length ? S.msgs.map(m => `<div class="cm-msg"><div class="cab"><b>${esc(m.autor_nome || m.autor_email || '—')}</b>
       <span>${fmtDH(m.criado_em)}</span>${m.status ? `<span class="cm-badge ${badgeClasse(m.status)}">${esc(m.status)}</span>` : ''}</div>
       ${m.comentario ? `<div class="txt">${esc(m.comentario)}</div>` : ''}</div>`).join('')
-      : '<div class="cm-vazio">Sem lançamentos ainda. Registre abaixo, por exemplo: "Enviada - aguardando aprovação".</div>';
+      : `<div class="cm-vazio">Sem lançamentos ainda. ${S.leitura ? 'Use o campo abaixo para aprovar, reprovar ou deixar uma observação.' : 'Registre abaixo, por exemplo: "Enviada - aguardando aprovação".'}</div>`;
     return `<div class="cm-chat" id="cm-chat">${msgs}</div>
       <div class="cm-form"><label>Novo lançamento (autor e data/hora ficam registrados automaticamente)</label>
-      <select id="cm-st"><option value="">Somente comentário</option>${STATUS_LISTA.map(s => `<option>${esc(s)}</option>`).join('')}</select>
-      <textarea id="cm-txt" rows="3" placeholder="Ex.: Enviada para a Juliana (Ansell) aguardando aprovação..."></textarea>
-      <button class="cm-btn prim" data-act="enviar-msg">Registrar</button></div>`;
+      <select id="cm-st"><option value="">Somente comentário</option>${(S.leitura ? STATUS_CONVIDADO : STATUS_LISTA).map(s => `<option>${esc(s)}</option>`).join('')}</select>
+      <textarea id="cm-txt" rows="3" placeholder="${S.leitura ? 'Observações sobre a tabela...' : 'Ex.: Enviada para a Juliana (Ansell) aguardando aprovação...'}"></textarea>
+      <button class="cm-btn prim" data-act="enviar-msg">${S.leitura ? 'Enviar' : 'Registrar'}</button></div>`;
   }
 
   function ufsDaTabela(d) { return [...new Set([...d.cidades.map(c => c.uf), ...d.faixas.linhas.map(c => c.uf)])].sort(); }
@@ -396,13 +396,10 @@
   async function renderTabelas() {
     const el = container('tabelas');
     el.innerHTML = topo('Tabela Comercial') + '<div id="cm-lista"></div><div id="cm-nova"></div><div id="cm-detalhe"></div>';
-    if (S.leitura) { S.selT = S.tabelas.length ? S.tabelas[0].id : null; S.subaba = 'tarifas'; }
     await redesenharTabelas();
   }
   async function redesenharTabelas() {
-    document.getElementById('cm-lista').innerHTML = S.leitura
-      ? (S.tabelas.length ? '' : '<div class="cm-erro">Nenhuma tabela vigente disponível no momento.</div>')
-      : renderListaTabelas();
+    document.getElementById('cm-lista').innerHTML = renderListaTabelas();
     document.getElementById('cm-nova').innerHTML = renderNovaTabela();
     if (S.novaT && S.novaT.ajustar) atualizarRevLista();
     document.getElementById('cm-detalhe').innerHTML = renderDetalheTabela();
@@ -652,7 +649,7 @@
     const b = ev.target.closest('[data-act]');
     if (!b || !(b.closest('#tab-tabcomercial') || b.closest('#tab-regraicms') || b.closest('#tab-simulacaocusto'))) return;
     const act = b.dataset.act;
-    if (S.leitura && ['nova-t', 'salvar-t', 'vigente-t', 'enviar-msg', 'nova-r', 'salvar-r', 'vigente-r'].includes(act)) return;
+    if (S.leitura && ['nova-t', 'salvar-t', 'vigente-t', 'nova-r', 'salvar-r', 'vigente-r'].includes(act)) return;
     const qual = qualAtual();
     try {
       if (act === 'sair') { await cli().auth.signOut(); location.reload(); }
