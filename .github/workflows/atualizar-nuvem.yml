@@ -42,4 +42,7 @@ jobs:
 
       - name: Resumo (pra comparar com o PC)
         if: always()
-        run: grep -E "Periodo|linhas|em_transito|nf_pendente|ocorrencias_problema|NF_STATUS|Falha|ERRO|NAO_PUSH" pipeline.log | tail -n 20
+        run: |
+          grep -E "Periodo|linhas|em_transito|nf_pendente|ocorrencias_problema|NF_STATUS|Falha|ERRO|NAO_PUSH" pipeline.log | tail -n 20
+          echo "::notice title=Resumo::$(grep -E 'Periodo|linhas|em_transito|nf_pendente|ocorrencias_problema|NF_STATUS|NAO_PUSH' pipeline.log | tail -n 12 | tr '\n' '|')"
+          echo "::error title=Fim do log::$(tail -n 14 pipeline.log | cut -c1-300 | tr '\n' '|')"
