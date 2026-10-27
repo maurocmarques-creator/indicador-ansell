@@ -26,6 +26,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "28/09/2026 14:16"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "pagamento da ND efetuado em 20/10",
+        "data": "27/10/2026 07:39"
       }
     ],
     "288846": [
@@ -43,6 +48,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "28/09/2026 14:17"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento programado pelo financeiro",
+        "data": "27/10/2026 07:41"
       }
     ],
     "288854": [
@@ -60,6 +70,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando a confirmação do valor referente a caixa extraviada para emissão e envio da carta de extravio.",
         "data": "28/09/2026 14:35"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento da ND programado pelo financeiro.",
+        "data": "27/10/2026 07:44"
       }
     ],
     "288855": [
@@ -77,6 +92,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "28/09/2026 14:27"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento programado pelo financeiro",
+        "data": "27/10/2026 07:40"
       }
     ],
     "289028": [
@@ -89,6 +109,13 @@
         "autor": "PortoEx",
         "texto": "Extravio parcial de 1 volume, aguardando instruções de como devemos seguir com os demais.",
         "data": "28/09/2026 14:42"
+      }
+    ],
+    "289630": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em buscas pelo material.",
+        "data": "27/10/2026 07:41"
       }
     ],
     "293980": [
@@ -106,6 +133,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "28/09/2026 14:43"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento da ND programado para o dia 27/10",
+        "data": "27/10/2026 07:43"
       }
     ],
     "294090": [
@@ -123,6 +155,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando NF de Débito",
         "data": "28/09/2026 14:44"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento da ND efetuado em 16/10",
+        "data": "27/10/2026 07:46"
       }
     ],
     "295486": [
@@ -231,6 +268,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando retorno da Ansell, que irá verificar junto a WS se os volumes se encontram no armazém.",
         "data": "28/09/2026 15:52"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução realizada no dia 23/10 na WS. Aguardando confirmação do valor para emitir a carta de extravio.",
+        "data": "27/10/2026 07:47"
       }
     ],
     "298613": [
@@ -479,6 +521,11 @@
         "autor": "PortoEx",
         "texto": "Devolução autorizada pela Ansell, agendada para 02/10 através do ID 19964.",
         "data": "29/09/2026 13:18"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução realizada na WS em 01/10",
+        "data": "27/10/2026 07:48"
       }
     ],
     "300304": [
