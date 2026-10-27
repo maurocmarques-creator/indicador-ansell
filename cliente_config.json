@@ -681,6 +681,13 @@
         "data": "29/09/2026 13:43"
       }
     ],
+    "301398": [
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento da ND programado pelo financeiro.",
+        "data": "27/10/2026 09:20"
+      }
+    ],
     "301566": [
       {
         "autor": "PortoEx",
@@ -728,6 +735,13 @@
         "autor": "PortoEx",
         "texto": "Autorizado pela Ansell para retirada pelo cliente na base de Pouso Alegre/MG. Carga disponível para retirada.",
         "data": "29/09/2026 10:35"
+      }
+    ],
+    "303545": [
+      {
+        "autor": "PortoEx",
+        "texto": "Mercadoria em transferência para devolução na Wilson Sons, previsão até 03/11.",
+        "data": "27/10/2026 09:22"
       }
     ]
   },
