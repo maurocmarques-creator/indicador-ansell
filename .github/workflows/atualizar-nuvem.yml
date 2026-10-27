@@ -1,0 +1,45 @@
+name: Atualizar Indicador Ansell (nuvem)
+
+# TESTE: roda o pipeline inteiro nos servidores do GitHub, sem commit/push
+# (NAO_PUSH=1) e sem e-mail, so pra conferir se o portal Brudam responde
+# a partir da nuvem e se os numeros batem com o que o PC gerou.
+on:
+  workflow_dispatch:
+  push:
+    branches: [nuvem-teste]
+
+concurrency:
+  group: atualizar-ansell
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TZ: America/Sao_Paulo
+      PORTAL_USER: ${{ secrets.PORTAL_USER }}
+      PORTAL_PASS: ${{ secrets.PORTAL_PASS }}
+      NAO_PUSH: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Rodar pipeline
+        run: python pipeline_atualizar.py
+
+      - name: Resumo (pra comparar com o PC)
+        if: always()
+        run: grep -E "Periodo|linhas|em_transito|nf_pendente|ocorrencias_problema|NF_STATUS|Falha|ERRO|NAO_PUSH" pipeline.log | tail -n 20

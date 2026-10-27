@@ -494,6 +494,9 @@ def limpar_desktop_ini_do_git():
 
 
 def commit_e_push(dados_mudaram: bool):
+    if os.environ.get("NAO_PUSH"):
+        log("NAO_PUSH definido -- pulando commit/push (modo teste).")
+        return
     limpar_desktop_ini_do_git()
     log("\nVerificando alteracoes no git...")
     arquivos_rastreados = ["index.html", "em_transito.json", "nf_pendente.json", "ocorrencias_historico.json", "ocorrencias_problema.json"]
