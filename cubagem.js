@@ -14,6 +14,7 @@
   const RE_QTD = new RegExp('\\b' + UNID + '\\s+([\\d.]+,\\d{2,4})\\s+([\\d.]+,\\d{2,10})', 'g');
   const RE_TOK = /[A-Za-z0-9][A-Za-z0-9.\-/]{2,}/g;
 
+  const APROX = 40;   // cm: medida aproximada (40 x 40 x 40) para item sem medida na tabela
   const S = { medidas: null, idx: null, notas: [], abertas: new Set(), ordem: { col: null, dir: 1 }, msg: '', lendo: false, pronto: false };
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -137,8 +138,18 @@
     const { itens, linhasProduto } = itensDaNota(cab.secao);
     delete cab.secao;
     const obs = [], sem = itens.filter(i => i.semMedida);
-    if (sem.length) obs.push('SEM MEDIDA na tabela: ' + sem.map(i => i.cod).join(', ') + ' — a cubagem da nota está incompleta');
-    else if (!itens.length) obs.push('nenhum item da nota encontrado na tabela de medidas');
+    if (sem.length) {
+      // item sem medida: caixa aproximada de 40 x 40 x 40 cm; sem "un. por caixa", as caixas saem dos volumes da propria nota
+      const conhecidas = itens.filter(i => !i.semMedida).reduce((s, i) => s + (i.cx || 0), 0);
+      const resto = cab.volumes != null ? Math.max(0, cab.volumes - conhecidas) : 0;
+      const cada = Math.max(1, Math.ceil(resto / sem.length));
+      sem.forEach(i => {
+        i.c = i.l = i.a = APROX; i.volCx = APROX * APROX * APROX / 1e6; i.cx = cada; i.aprox = true;
+        i.obs = 'MEDIDA APROXIMADA (40 × 40 × 40 cm): item sem medida na tabela; ' + cada + ' caixa(s) pelos volumes da nota';
+      });
+      obs.push('MEDIDAS APROXIMADAS (40 × 40 × 40 cm) para: ' + sem.map(i => i.cod).join(', ') + ' — cadastrar a medida na tabela');
+      cab.aprox = true;
+    } else if (!itens.length) obs.push('nenhum item da nota encontrado na tabela de medidas');
     if (!cab.nf) obs.push('não consegui ler o número da nota');
     itens.forEach(i => { i.cub = (i.cx == null || i.volCx == null) ? 0 : i.cx * i.volCx; });
     cab.caixas = itens.reduce((s, i) => s + (i.cx || 0), 0);
@@ -193,15 +204,15 @@
       const aberta = S.abertas.has(n.nf), ok = !n.obs;
       let h = `<tr class="cb-lin" onclick="cubagemAlternar('${esc(n.nf)}')" style="cursor:pointer">
         <td><span style="color:#64748b">${aberta ? '▾' : '▸'}</span> <b>${esc(n.nf)}</b></td><td>${esc(n.emissao)}</td><td>${esc(n.destinatario)}</td><td>${esc(n.municipio)}</td><td>${esc(n.uf)}</td>
-        <td class="r">${brl(n.valor)}</td><td class="r">${fmt(n.volumes, 0)}</td><td class="r">${fmt(n.caixas, 0)}${n.volumes != null && n.caixas === n.volumes ? ' <span style="color:#166534" title="bate com os volumes da nota">✔</span>' : ''}</td><td class="r">${fmt(n.peso, 1)}</td><td class="r">${fmt(n.qtd, 0)}</td>
+        <td class="r">${brl(n.valor)}</td><td class="r">${fmt(n.volumes, 0)}</td><td class="r">${fmt(n.caixas, 0)}${n.aprox ? ' <span style="color:#b45309" title="caixas contadas pelos volumes da nota (item sem medida)">≈</span>' : (n.volumes != null && n.caixas === n.volumes ? ' <span style="color:#166534" title="bate com os volumes da nota">✔</span>' : '')}</td><td class="r">${fmt(n.peso, 1)}</td><td class="r">${fmt(n.qtd, 0)}</td>
         <td class="r"><b>${fmt(n.cub, 4)}</b></td>
-        <td>${ok ? '<span style="color:#166534">✔ ok</span>' : '<span style="color:#b91c1c" title="' + esc(n.obs) + '">⚠ ' + esc(n.obs.length > 70 ? n.obs.slice(0, 70) + '…' : n.obs) + '</span>'}</td></tr>`;
+        <td>${ok ? '<span style="color:#166534">✔ ok</span>' : '<span style="color:' + (n.aprox ? '#b45309' : '#b91c1c') + '" title="' + esc(n.obs) + '">⚠ ' + esc(n.obs.length > 70 ? n.obs.slice(0, 70) + '…' : n.obs) + '</span>'}</td></tr>`;
       if (aberta) {
         h += `<tr><td colspan="${COLS.length}" style="background:#f8fafc;padding:8px 14px 12px 34px">
           <div style="font-size:.74rem;color:#64748b;margin-bottom:4px">${esc(n.emitente)} → ${esc(n.destinatario)} · ${esc(n.municipio)}/${esc(n.uf)} · arquivo ${esc(n.arquivo)}</div>
-          ${n.obs ? '<div style="font-size:.76rem;color:#b91c1c;margin-bottom:6px">' + esc(n.obs) + '</div>' : ''}
+          ${n.obs ? '<div style="font-size:.76rem;color:' + (n.aprox ? '#b45309' : '#b91c1c') + ';margin-bottom:6px">' + esc(n.obs) + '</div>' : ''}
           <table style="width:auto"><thead><tr><th>Item</th><th class="r">Qtd (nota)</th><th class="r">Un. por caixa</th><th class="r">Caixas (qtd ÷ un.)</th><th class="r">Caixa C × L × A (cm)</th><th class="r">Cubagem da caixa (m³)</th><th class="r">Cubagem do item (m³)</th><th>Observação</th></tr></thead><tbody>` +
-          n.itens.map(i => `<tr style="${i.semMedida ? 'background:#fef2f2' : ''}"><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.semMedida ? '—' : fmt(i.un, 0)}</td><td class="r">${i.semMedida ? '—' : fmt(i.cx, 0)}</td><td class="r">${i.semMedida ? '—' : i.c + ' × ' + i.l + ' × ' + i.a}</td><td class="r">${i.semMedida ? '—' : fmt(i.volCx, 6)}</td><td class="r"><b>${i.semMedida ? '—' : fmt(i.cub, 4)}</b></td><td style="${i.semMedida ? 'color:#b91c1c' : ''}">${esc(i.obs)}</td></tr>`).join('') +
+          n.itens.map(i => `<tr style="${i.aprox ? 'background:#fffbeb' : ''}"><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.aprox ? '—' : fmt(i.un, 0)}</td><td class="r">${fmt(i.cx, 0)}</td><td class="r">${i.c} × ${i.l} × ${i.a}${i.aprox ? ' <span style="color:#b45309;font-weight:700" title="medida aproximada">≈ aprox.</span>' : ''}</td><td class="r">${fmt(i.volCx, 6)}</td><td class="r"><b>${fmt(i.cub, 4)}</b></td><td style="${i.aprox ? 'color:#b45309' : ''}">${esc(i.obs)}</td></tr>`).join('') +
           `</tbody></table></td></tr>`;
       }
       return h;
@@ -247,7 +258,7 @@
         { t: 'n', v: n.qtd, f: `SUMIFS(Itens!$F:$F,Itens!$A:$A,A${r})` }, { t: 'n', v: n.caixas, f: `SUMIFS(Itens!$H:$H,Itens!$A:$A,A${r})` }, { t: 'n', v: n.cub, f: `SUMIFS(Itens!$M:$M,Itens!$A:$A,A${r})` }, n.obs]);
       n.itens.forEach(i => {
         const q = wi.length + 1;
-        wi.push(i.semMedida ? [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, '', '', '', '', '', '', '', i.obs]
+        wi.push(i.aprox ? [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, '', i.cx, i.c, i.l, i.a, { t: 'n', v: i.volCx, f: `I${q}*J${q}*K${q}/1000000` }, { t: 'n', v: i.cub, f: `H${q}*L${q}` }, i.obs]
           : [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, i.un, { t: 'n', v: i.cx, f: `ROUNDUP(F${q}/G${q},0)` }, i.c, i.l, i.a, { t: 'n', v: i.volCx, f: `I${q}*J${q}*K${q}/1000000` }, { t: 'n', v: i.cub, f: `H${q}*L${q}` }, i.obs]);
       });
     });
