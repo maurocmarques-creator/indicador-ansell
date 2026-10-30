@@ -132,6 +132,7 @@ tr:last-child td{border-bottom:none}
     <div class="tmenu">
       <div class="tab" data-tab="expectativa" onclick="showTab('expectativa')">📊 Expectativa</div>
       <div class="tab" data-tab="mapa" onclick="showTab('mapa')">🗺 Mapa</div>
+      <div class="tab" data-tab="cubagem" onclick="showTab('cubagem')">📦 Conferência de Cubagem</div>
     </div></div>
   <div style="position:relative;margin-left:auto;display:flex;align-items:center;gap:2px">
     <button id="btn-atualizar-agora" class="tab" type="button" style="border:0;background:transparent;cursor:pointer;font:inherit" title="Dispara a extração do portal agora, sem esperar o próximo horário programado (06h/12h/18h/23h59)">🔄 Atualizar Agora</button>
@@ -595,6 +596,7 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <!-- TAB: MAPA -->
+<div id="tab-cubagem" class="content"></div>
 <div id="tab-mapa" class="content">
   <div class="table-card" style="padding:16px 20px 12px">
     <h3 style="margin-bottom:10px">Dispersão de Entregas por Cidade <span class="tag-filtro">(Prev. Entrega)</span></h3>
@@ -3285,12 +3287,13 @@ function showTab(id) {
   const grp = btn.closest('.tgrp'); if (grp) { grp.querySelector('.tgrp-btn').classList.add('active'); grp.classList.remove('open'); }
   conteudo.classList.add('active');
   // Hide global filters on tabs that have their own filter row (nao usam Ano/Mes/etc.)
-  document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf' || id === 'posicaonf') ? 'none' : 'flex';
+  document.querySelector('.filters').style.display = (id === 'expectativa' || id === 'statusnf' || id === 'posicaonf' || id === 'cubagem') ? 'none' : 'flex';
   if (id === 'mapa') renderMapa();
   if (id === 'expectativa') renderExpectativa();
   if (id === 'transito') renderTransito();
   if (id === 'ocorrencias') renderOcorrencias();
   if (id === 'antecipadas') renderAntecipadas();
+  if (id === 'cubagem' && window.cubagemAbrir) cubagemAbrir();   // se o cubagem.js ainda nao carregou, ele mesmo abre ao carregar
   if (id === 'statusnf') renderStatusNF();
   if (id === 'posicaonf') renderPosicaoNF();
   // Guarda a aba atual no # da URL, sem recarregar a pagina -- assim, ao
@@ -3302,5 +3305,6 @@ function showTab(id) {
 // Start
 init();
 </script>
+<script src="cubagem.js"></script>
 </body>
 </html>
