@@ -75,17 +75,18 @@
     if (!chave) { const m = txt.match(/(?:\d{4}\s){10}\d{4}/); if (m) chave = m[0].replace(/\s/g, ''); }
     let m = txt.match(/N[º°o.]*\s*(\d{3}\.\d{3}\.\d{3})/);
     cab.nf = chave ? String(parseInt(chave.slice(25, 34), 10)) : (m ? String(parseInt(m[1].replace(/\./g, ''), 10)) : '');
-    m = txt.match(/Emiss.o:\s*(\d{2}\/\d{2}\/\d{4})/); cab.emissao = m ? m[1] : '';
-    m = txt.match(/Dest\/Reme:\s*(.+?)\s+Valor Total:\s*R\$\s*([\d.,]+)/);
+    m = txt.match(/Emiss.o:\s*(\d{2}\/\d{2}\/\d{4})/i); cab.emissao = m ? m[1] : '';
+    m = txt.match(/Dest\/Reme:\s*(.+?)\s+Valor Total:\s*R\$\s*([\d.,]+)/i);
     cab.destinatario = m ? m[1].trim() : ''; cab.valor = m ? br(m[2]) : null;
+    if (cab.valor == null) { m = txt.match(/VALOR TOTAL:\s*R\$\s*([\d.,]+)/i); if (m) cab.valor = br(m[1]); }
     if (!cab.destinatario) { const i = linhas.findIndex(l => /^NOME \/ RAZ.O SOCIAL CNPJ/.test(l)); if (i >= 0 && linhas[i + 1]) cab.destinatario = linhas[i + 1].replace(/\s+\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}.*$/, '').trim(); }
     let i = linhas.findIndex(l => /^MUNIC.PIO\s+UF/i.test(l));
     m = i >= 0 && linhas[i + 1] ? linhas[i + 1].match(/^(.+?)\s+([A-Z]{2})\s+\(?\d/) : null;
     cab.municipio = m ? m[1].trim() : ''; cab.uf = m ? m[2] : '';
     i = linhas.findIndex(l => /^QUANTIDADE\s/i.test(l));
-    m = i >= 0 && linhas[i + 1] ? linhas[i + 1].match(/^(\d+)\s+\S+.*?([\d.]+,\d{3})\s*KG/i) : null;
+    m = i >= 0 && linhas[i + 1] ? linhas[i + 1].match(/^(\d+)\s+\D.*?(\d[\d.]*,\d{3})/) : null;   // 1o numero com 3 decimais = peso bruto (com ou sem 'KG')
     cab.volumes = m ? parseInt(m[1], 10) : null; cab.peso = m ? br(m[2]) : null;
-    m = txt.match(/Recebemos de (.+?) os produtos/); cab.emitente = m ? m[1].trim() : '';
+    m = txt.match(/Recebemos de (.+?) os produtos/i); cab.emitente = m ? m[1].trim() : '';
     const a = txt.toUpperCase().indexOf('DADOS DOS PRODUTOS'), b = txt.toUpperCase().indexOf('DADOS ADICIONAIS');
     cab.secao = a >= 0 && b > a ? txt.slice(a, b) : txt;
     return cab;
@@ -109,13 +110,21 @@
       pos += ln.length + 1;
     });
     const qtds = [...secao.matchAll(RE_QTD)].map(m => ({ pos: m.index, q: br(m[1]) }));
+    const usadas = new Set();
     const itens = achados.map(a => {
-      const reg = S.idx.get(a.cod), x = reg[0], q = (qtds.find(k => k.pos > a.pos) || {}).q;
+      const reg = S.idx.get(a.cod), x = reg[0], k = qtds.find(k => k.pos > a.pos), q = k ? k.q : undefined;
+      if (k) usadas.add(k.pos);
       const obs = [];
       if (a.aviso) obs.push(a.aviso);
       if (new Set(reg.map(r => r.c + 'x' + r.l + 'x' + r.a)).size > 1) obs.push(reg.length + ' medidas na tabela; usada a 1ª');
       if (q == null) obs.push('quantidade não encontrada');
       return { cod: a.cod, qtd: q == null ? null : q, c: x.c, l: x.l, a: x.a, cub1: x.c * x.l * x.a / 1e6, obs: obs.join('; ') };
+    });
+    // linhas de produto cuja quantidade nao foi usada por nenhum item da tabela: o codigo nao esta na tabela de medidas
+    qtds.filter(k => !usadas.has(k.pos)).forEach(k => {
+      const ini = secao.lastIndexOf('\n', k.pos) + 1, cod1 = (secao.slice(ini, k.pos).trim().split(/\s+/)[0] || '').replace(/\.+$/, '');
+      const cod = /^[A-Za-z0-9][A-Za-z0-9.\-/]{3,}$/.test(cod1) && !/^\d{8}$/.test(cod1) ? cod1 : '(código não identificado)';
+      itens.push({ cod, qtd: k.q, c: null, l: null, a: null, cub1: null, semMedida: true, obs: 'sem medida na tabela de medidas' });
     });
     return { itens, linhasProduto: qtds.length };
   }
@@ -125,11 +134,11 @@
     const cab = cabecalhoDaNota(linhas, arq.name);
     const { itens, linhasProduto } = itensDaNota(cab.secao);
     delete cab.secao;
-    const obs = [];
-    if (!itens.length) obs.push('nenhum item da nota encontrado na tabela de medidas');
-    else if (itens.length !== linhasProduto) obs.push('ATENÇÃO: ' + itens.length + ' item(ns) com medida, mas a nota tem ' + linhasProduto + ' linha(s) de produto — falta medida de algum item');
+    const obs = [], sem = itens.filter(i => i.semMedida);
+    if (sem.length) obs.push('SEM MEDIDA na tabela: ' + sem.map(i => i.cod).join(', ') + ' — a cubagem da nota está incompleta');
+    else if (!itens.length) obs.push('nenhum item da nota encontrado na tabela de medidas');
     if (!cab.nf) obs.push('não consegui ler o número da nota');
-    itens.forEach(i => { i.cub = i.qtd == null ? 0 : i.qtd * i.cub1; });
+    itens.forEach(i => { i.cub = (i.qtd == null || i.cub1 == null) ? 0 : i.qtd * i.cub1; });
     cab.itens = itens; cab.obs = obs.join('; ');
     cab.qtd = itens.reduce((s, i) => s + (i.qtd || 0), 0);
     cab.cub = itens.reduce((s, i) => s + i.cub, 0);
@@ -188,7 +197,7 @@
           <div style="font-size:.74rem;color:#64748b;margin-bottom:4px">${esc(n.emitente)} → ${esc(n.destinatario)} · ${esc(n.municipio)}/${esc(n.uf)} · arquivo ${esc(n.arquivo)}</div>
           ${n.obs ? '<div style="font-size:.76rem;color:#b91c1c;margin-bottom:6px">' + esc(n.obs) + '</div>' : ''}
           <table style="width:auto"><thead><tr><th>Item</th><th class="r">Qtd (nota)</th><th class="r">C × L × A (cm)</th><th class="r">Cubagem 1 un (m³)</th><th class="r">Cubagem do item (m³)</th><th>Observação</th></tr></thead><tbody>` +
-          n.itens.map(i => `<tr><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.c} × ${i.l} × ${i.a}</td><td class="r">${fmt(i.cub1, 6)}</td><td class="r"><b>${fmt(i.cub, 4)}</b></td><td>${esc(i.obs)}</td></tr>`).join('') +
+          n.itens.map(i => `<tr style="${i.semMedida ? 'background:#fef2f2' : ''}"><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.semMedida ? '—' : i.c + ' × ' + i.l + ' × ' + i.a}</td><td class="r">${i.semMedida ? '—' : fmt(i.cub1, 6)}</td><td class="r"><b>${i.semMedida ? '—' : fmt(i.cub, 4)}</b></td><td style="${i.semMedida ? 'color:#b91c1c' : ''}">${esc(i.obs)}</td></tr>`).join('') +
           `</tbody></table></td></tr>`;
       }
       return h;
@@ -234,7 +243,8 @@
         { t: 'n', v: n.qtd, f: `SUMIFS(Itens!$F:$F,Itens!$A:$A,A${r})` }, { t: 'n', v: n.cub, f: `SUMIFS(Itens!$K:$K,Itens!$A:$A,A${r})` }, n.obs]);
       n.itens.forEach(i => {
         const q = wi.length + 1;
-        wi.push([n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, i.c, i.l, i.a, { t: 'n', v: i.cub1, f: `G${q}*H${q}*I${q}/1000000` }, { t: 'n', v: i.cub, f: `IF(F${q}="","",F${q}*J${q})` }, i.obs]);
+        wi.push(i.semMedida ? [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, '', '', '', '', '', i.obs]
+          : [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, i.c, i.l, i.a, { t: 'n', v: i.cub1, f: `G${q}*H${q}*I${q}/1000000` }, { t: 'n', v: i.cub, f: `IF(F${q}="","",F${q}*J${q})` }, i.obs]);
       });
     });
     const wb = XLSX.utils.book_new();
