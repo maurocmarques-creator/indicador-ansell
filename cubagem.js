@@ -37,8 +37,8 @@
       if (!r.ok) throw new Error('Tabela de medidas (cubagem_medidas.json) não encontrada.');
       S.medidas = await r.json();
       S.idx = new Map();
-      S.medidas.m.forEach(([cli, item, peg, c, l, a, pb]) => {
-        const reg = { cliente: cli, item, pegada: peg, c, l, a, pb };
+      S.medidas.m.forEach(([cli, item, peg, c, l, a, pb, un, cubUn, conf]) => {
+        const reg = { cliente: cli, item, pegada: peg, c, l, a, pb, un, cubUn, conf };
         new Set([String(item).toUpperCase(), String(peg).toUpperCase()]).forEach(k => { if (!S.idx.has(k)) S.idx.set(k, []); S.idx.get(k).push(reg); });
       });
     }
@@ -118,13 +118,14 @@
       if (a.aviso) obs.push(a.aviso);
       if (new Set(reg.map(r => r.c + 'x' + r.l + 'x' + r.a)).size > 1) obs.push(reg.length + ' medidas na tabela; usada a 1ª');
       if (q == null) obs.push('quantidade não encontrada');
-      return { cod: a.cod, qtd: q == null ? null : q, c: x.c, l: x.l, a: x.a, cub1: x.c * x.l * x.a / 1e6, obs: obs.join('; ') };
+      if (x.conf === 'INCOERENTE') obs.push('medida por unidade do relatório pegada não confere com a caixa; usada caixa ÷ un. por caixa');
+      return { cod: a.cod, qtd: q == null ? null : q, c: x.c, l: x.l, a: x.a, un: x.un, cub1: x.cubUn, obs: obs.join('; ') };
     });
     // linhas de produto cuja quantidade nao foi usada por nenhum item da tabela: o codigo nao esta na tabela de medidas
     qtds.filter(k => !usadas.has(k.pos)).forEach(k => {
       const ini = secao.lastIndexOf('\n', k.pos) + 1, cod1 = (secao.slice(ini, k.pos).trim().split(/\s+/)[0] || '').replace(/\.+$/, '');
       const cod = /^[A-Za-z0-9][A-Za-z0-9.\-/]{3,}$/.test(cod1) && !/^\d{8}$/.test(cod1) ? cod1 : '(código não identificado)';
-      itens.push({ cod, qtd: k.q, c: null, l: null, a: null, cub1: null, semMedida: true, obs: 'sem medida na tabela de medidas' });
+      itens.push({ cod, qtd: k.q, c: null, l: null, a: null, un: null, cub1: null, semMedida: true, obs: 'sem medida na tabela de medidas' });
     });
     return { itens, linhasProduto: qtds.length };
   }
@@ -196,16 +197,16 @@
         h += `<tr><td colspan="${COLS.length}" style="background:#f8fafc;padding:8px 14px 12px 34px">
           <div style="font-size:.74rem;color:#64748b;margin-bottom:4px">${esc(n.emitente)} → ${esc(n.destinatario)} · ${esc(n.municipio)}/${esc(n.uf)} · arquivo ${esc(n.arquivo)}</div>
           ${n.obs ? '<div style="font-size:.76rem;color:#b91c1c;margin-bottom:6px">' + esc(n.obs) + '</div>' : ''}
-          <table style="width:auto"><thead><tr><th>Item</th><th class="r">Qtd (nota)</th><th class="r">C × L × A (cm)</th><th class="r">Cubagem 1 un (m³)</th><th class="r">Cubagem do item (m³)</th><th>Observação</th></tr></thead><tbody>` +
-          n.itens.map(i => `<tr style="${i.semMedida ? 'background:#fef2f2' : ''}"><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.semMedida ? '—' : i.c + ' × ' + i.l + ' × ' + i.a}</td><td class="r">${i.semMedida ? '—' : fmt(i.cub1, 6)}</td><td class="r"><b>${i.semMedida ? '—' : fmt(i.cub, 4)}</b></td><td style="${i.semMedida ? 'color:#b91c1c' : ''}">${esc(i.obs)}</td></tr>`).join('') +
+          <table style="width:auto"><thead><tr><th>Item</th><th class="r">Qtd (nota)</th><th class="r">Caixa C × L × A (cm)</th><th class="r">Un. por caixa</th><th class="r">Cubagem 1 un (m³)</th><th class="r">Cubagem do item (m³)</th><th>Observação</th></tr></thead><tbody>` +
+          n.itens.map(i => `<tr style="${i.semMedida ? 'background:#fef2f2' : ''}"><td>${esc(i.cod)}</td><td class="r">${fmt(i.qtd, 0)}</td><td class="r">${i.semMedida ? '—' : i.c + ' × ' + i.l + ' × ' + i.a}</td><td class="r">${i.semMedida ? '—' : fmt(i.un, 0)}</td><td class="r">${i.semMedida ? '—' : fmt(i.cub1, 7)}</td><td class="r"><b>${i.semMedida ? '—' : fmt(i.cub, 4)}</b></td><td style="${i.semMedida ? 'color:#b91c1c' : ''}">${esc(i.obs)}</td></tr>`).join('') +
           `</tbody></table></td></tr>`;
       }
       return h;
     }).join('');
     el.innerHTML = `
       <p style="font-size:.78rem;color:#64748b;margin:0 0 14px">Importe os <b>DANFE em PDF</b> das notas: a aba lê o destinatário, o município/UF e os itens, e cruza cada item com a <b>tabela de medidas</b>
-        (${S.medidas ? fmt(S.medidas.m.length, 0) + ' itens, importados de ' + esc(S.medidas.fonte) + ' em ' + esc(S.medidas.gerado) : 'Medidas Ansell.xls'}; medidas em cm arredondadas para cima, exceto ",001", que vai para baixo).
-        <b>Cubagem = quantidade da nota × cubagem de 1 unidade</b> (é um teto: não considera as unidades embaladas em caixas menores). O PDF é lido no seu navegador e não é enviado a lugar nenhum.</p>
+        (${S.medidas ? fmt(S.medidas.m.length, 0) + ' itens, de ' + esc(S.medidas.fonte) + ', importados em ' + esc(S.medidas.gerado) : 'Relatório pegada'}; medidas da caixa em cm arredondadas para cima, exceto ",001", que vai para baixo).
+        <b>Cubagem = quantidade da nota × cubagem de 1 unidade</b>, onde 1 unidade = cubagem da caixa ÷ unidades por caixa. O PDF é lido no seu navegador e não é enviado a lugar nenhum.</p>
       <div class="table-card" style="margin-bottom:14px">
         <div id="cb-drop" style="border:2px dashed #94a3b8;border-radius:10px;padding:22px;text-align:center;background:#f8fafc;cursor:pointer"
              ondragover="event.preventDefault();this.style.background='#e0f2fe'" ondragleave="this.style.background='#f8fafc'"
@@ -219,7 +220,7 @@
         <div class="kpi"><label>Notas</label><div class="value">${fmt(ns.length, 0)}</div><div class="sub">${fmt(tot.q, 0)} unidades</div></div>
         <div class="kpi"><label>Volumes (nota)</label><div class="value">${fmt(tot.vol, 0)}</div><div class="sub">${fmt(tot.p, 1)} kg de peso bruto</div></div>
         <div class="kpi orange"><label>Valor das Notas</label><div class="value">${brl(tot.v)}</div><div class="sub">&nbsp;</div></div>
-        <div class="kpi red"><label>Cubagem Total</label><div class="value">${fmt(tot.c, 4)} m³</div><div class="sub">teto (qtd × 1 un)</div></div>
+        <div class="kpi red"><label>Cubagem Total</label><div class="value">${fmt(tot.c, 4)} m³</div><div class="sub">qtd × cubagem de 1 un</div></div>
       </div>
       <div class="table-card">
         <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
@@ -236,21 +237,21 @@
   function exportar() {
     if (!S.notas.length || !window.XLSX) return;
     const wn = [['NF', 'Emissão', 'Emitente', 'Destinatário', 'Município', 'UF', 'Valor NF R$', 'Volumes (nota)', 'Peso bruto kg (nota)', 'Qtd de itens (un)', 'CUBAGEM TOTAL (m³)', 'Situação']];
-    const wi = [['NF', 'Destinatário', 'Município', 'UF', 'Item', 'Qtd (nota)', 'C cm', 'L cm', 'A cm', 'Cubagem 1 un (m³)', 'Cubagem do item (m³)', 'Observação']];
+    const wi = [['NF', 'Destinatário', 'Município', 'UF', 'Item', 'Qtd (nota)', 'Caixa C cm', 'Caixa L cm', 'Caixa A cm', 'Un. por caixa', 'Cubagem 1 un (m³)', 'Cubagem do item (m³)', 'Observação']];
     S.notas.forEach(n => {
       const r = wn.length + 1;
       wn.push([n.nf, n.emissao, n.emitente, n.destinatario, n.municipio, n.uf, n.valor, n.volumes, n.peso,
-        { t: 'n', v: n.qtd, f: `SUMIFS(Itens!$F:$F,Itens!$A:$A,A${r})` }, { t: 'n', v: n.cub, f: `SUMIFS(Itens!$K:$K,Itens!$A:$A,A${r})` }, n.obs]);
+        { t: 'n', v: n.qtd, f: `SUMIFS(Itens!$F:$F,Itens!$A:$A,A${r})` }, { t: 'n', v: n.cub, f: `SUMIFS(Itens!$L:$L,Itens!$A:$A,A${r})` }, n.obs]);
       n.itens.forEach(i => {
         const q = wi.length + 1;
-        wi.push(i.semMedida ? [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, '', '', '', '', '', i.obs]
-          : [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, i.c, i.l, i.a, { t: 'n', v: i.cub1, f: `G${q}*H${q}*I${q}/1000000` }, { t: 'n', v: i.cub, f: `IF(F${q}="","",F${q}*J${q})` }, i.obs]);
+        wi.push(i.semMedida ? [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, '', '', '', '', '', '', i.obs]
+          : [n.nf, n.destinatario, n.municipio, n.uf, i.cod, i.qtd, i.c, i.l, i.a, i.un, { t: 'n', v: i.cub1, f: `G${q}*H${q}*I${q}/1000000/J${q}` }, { t: 'n', v: i.cub, f: `IF(F${q}="","",F${q}*K${q})` }, i.obs]);
       });
     });
     const wb = XLSX.utils.book_new();
     const a = XLSX.utils.aoa_to_sheet(wn), b = XLSX.utils.aoa_to_sheet(wi);
     a['!cols'] = [11, 11, 32, 36, 16, 5, 14, 10, 12, 12, 14, 50].map(w => ({ wch: w }));
-    b['!cols'] = [11, 36, 16, 5, 16, 10, 7, 7, 7, 14, 14, 40].map(w => ({ wch: w }));
+    b['!cols'] = [11, 36, 16, 5, 16, 10, 10, 10, 10, 10, 16, 16, 40].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, a, 'Por Nota'); XLSX.utils.book_append_sheet(wb, b, 'Itens');
     XLSX.writeFile(wb, 'Conferencia_Cubagem_' + new Date().toISOString().slice(0, 10) + '.xlsx');
   }
