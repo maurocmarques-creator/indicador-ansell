@@ -32,6 +32,13 @@ STATUS_OVERRIDES = CONFIG.get("status_overrides", {})
 # cliente_config.json para persistir a cada atualizacao.
 DATE_OVERRIDES = CONFIG.get("date_overrides", {})
 
+# Correcao manual da ULTIMA OCORRENCIA por MINUTA, para quando o Brudam
+# recebe uma ocorrencia lancada fora de ordem DEPOIS da entrega (ex.:
+# "103 - SAIDA EFETIVA" registrada depois de "1 - ENTREGA REALIZADA") e a
+# tela passa a mostrar a nota como se ainda estivesse saindo pra entrega.
+# Fica em cliente_config.json para persistir a cada atualizacao.
+OCORRENCIA_OVERRIDES = CONFIG.get("ocorrencia_overrides", {})
+
 # Mural de observacoes por MINUTA, mostrado na aba Em Transito logo
 # abaixo da descricao da ultima ocorrencia -- uma "conversa" (lista de
 # mensagens, mais recente por ultimo) que o time PortoEx escreve na
@@ -314,6 +321,7 @@ def build_rows(df, hoje=None):
         coord = CITY_COORD.get(f"{eff_cidade}|{eff_uf}") or UF_CENTROID.get(eff_uf)
         descricao_ultimo = r.get('DESCRICAO ULTIMO', '')
         descricao_ultimo = '' if pd.isna(descricao_ultimo) else descricao_ultimo
+        descricao_ultimo = OCORRENCIA_OVERRIDES.get(minuta, descricao_ultimo)
         status = STATUS_OVERRIDES.get(
             minuta, compute_status(tipo, data_entrega, prev_entrega, data_agendamento, hoje, descricao_ultimo)
         )
