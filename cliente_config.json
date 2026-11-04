@@ -73,7 +73,7 @@
       },
       {
         "autor": "PortoEx",
-        "texto": "Pagamento da ND programado pelo financeiro.",
+        "texto": "Pagamento da ND programado pelo financeiro para o dia 09/11",
         "data": "27/10/2026 07:44"
       }
     ],
@@ -273,6 +273,11 @@
         "autor": "PortoEx",
         "texto": "Devolução realizada no dia 23/10 na WS. Aguardando confirmação do valor para emitir a carta de extravio.",
         "data": "27/10/2026 07:47"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação do valor para emitir a carta de extravio",
+        "data": "04/11/2026 17:39"
       }
     ],
     "298613": [
@@ -730,6 +735,13 @@
         "data": "29/09/2026 10:36"
       }
     ],
+    "302090": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando confirmação do agendamento. Ansell enviou a planilha preenchida para Bunzl em 04/11.",
+        "data": "04/11/2026 18:04"
+      }
+    ],
     "302092": [
       {
         "autor": "PortoEx",
@@ -742,6 +754,83 @@
         "autor": "PortoEx",
         "texto": "Mercadoria em transferência para devolução na Wilson Sons, previsão até 03/11.",
         "data": "27/10/2026 09:22"
+      }
+    ],
+    "303862": [
+      {
+        "autor": "PortoEx",
+        "texto": "Ansell verificando com o armazém a questão das etiquetas. Aguardando retorno para definição de como dar andamento",
+        "data": "04/11/2026 18:03"
+      }
+    ],
+    "305034": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução para WS, previsão até 09/11.",
+        "data": "04/11/2026 18:05"
+      }
+    ],
+    "305821": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendado para o dia 06/11 as 08h30",
+        "data": "04/11/2026 18:10"
+      }
+    ],
+    "306389": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell sobre como prosseguir.",
+        "data": "04/11/2026 18:09"
+      }
+    ],
+    "306624": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
+        "data": "04/11/2026 18:14"
+      }
+    ],
+    "306862": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendado para o dia 09/11 as 08h30",
+        "data": "04/11/2026 18:15"
+      }
+    ],
+    "306866": [
+      {
+        "autor": "PortoEx",
+        "texto": "Reagendado para o dia 09/11 as 08h30",
+        "data": "04/11/2026 18:15"
+      }
+    ],
+    "306885": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
+        "data": "04/11/2026 18:18"
+      }
+    ],
+    "306887": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
+        "data": "04/11/2026 18:19"
+      }
+    ],
+    "306917": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
+        "data": "04/11/2026 18:13"
+      }
+    ],
+    "307443": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
+        "data": "04/11/2026 18:13"
       }
     ]
   },
