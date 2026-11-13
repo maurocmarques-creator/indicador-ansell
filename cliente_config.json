@@ -773,11 +773,23 @@
         "data": "13/11/2026 10:18"
       }
     ],
+    "304863": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução, previsão até 17/11.",
+        "data": "13/11/2026 10:26"
+      }
+    ],
     "305034": [
       {
         "autor": "PortoEx",
         "texto": "Em processo de devolução para WS, previsão até 09/11.",
         "data": "04/11/2026 18:05"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução realizada em 12/11",
+        "data": "13/11/2026 10:19"
       }
     ],
     "305821": [
@@ -792,6 +804,25 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell sobre como prosseguir.",
         "data": "04/11/2026 18:09"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, agendada para o dia 13/11.",
+        "data": "13/11/2026 10:20"
+      }
+    ],
+    "306422": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução, previsão até 25/11.",
+        "data": "13/11/2026 10:25"
+      }
+    ],
+    "306423": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução, previsão até 25/11.",
+        "data": "13/11/2026 10:25"
       }
     ],
     "306624": [
@@ -815,6 +846,13 @@
         "data": "04/11/2026 18:15"
       }
     ],
+    "306872": [
+      {
+        "autor": "PortoEx",
+        "texto": "Entrega realizada em 12/11.",
+        "data": "13/11/2026 10:24"
+      }
+    ],
     "306885": [
       {
         "autor": "PortoEx",
@@ -834,6 +872,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
         "data": "04/11/2026 18:13"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell e realizada em 12/11",
+        "data": "13/11/2026 10:22"
       }
     ],
     "307443": [
@@ -841,6 +884,81 @@
         "autor": "PortoEx",
         "texto": "Aguardando instruções da Ansell de como devemos prosseguir.",
         "data": "04/11/2026 18:13"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell e realizada em 12/11",
+        "data": "13/11/2026 10:23"
+      }
+    ],
+    "307467": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell e realizada em 12/11",
+        "data": "13/11/2026 10:24"
+      }
+    ],
+    "307703": [
+      {
+        "autor": "PortoEx",
+        "texto": "Cliente autorizou o recebimento da mercadoria com avaria em 12/11. Carga em rota de entrega em 13/11.",
+        "data": "13/11/2026 10:28"
+      }
+    ],
+    "307944": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell e realizada em 12/11",
+        "data": "13/11/2026 10:25"
+      }
+    ],
+    "308222": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 16/11.",
+        "data": "13/11/2026 10:30"
+      }
+    ],
+    "308226": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 16/11.",
+        "data": "13/11/2026 10:30"
+      }
+    ],
+    "308503": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11.",
+        "data": "13/11/2026 10:41"
+      }
+    ],
+    "309000": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11.",
+        "data": "13/11/2026 10:29"
+      }
+    ],
+    "309650": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações da Ansell para definição de como prosseguir.",
+        "data": "13/11/2026 10:45"
+      }
+    ],
+    "309950": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11.",
+        "data": "13/11/2026 10:42"
+      }
+    ],
+    "310314": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11.",
+        "data": "13/11/2026 10:47"
       }
     ]
   },
