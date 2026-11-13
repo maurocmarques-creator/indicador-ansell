@@ -75,6 +75,11 @@
         "autor": "PortoEx",
         "texto": "Pagamento da ND programado pelo financeiro para o dia 09/11",
         "data": "27/10/2026 07:44"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Pagamento da ND reprogramado pelo financeiro para o dia 17/11",
+        "data": "13/11/2026 10:15"
       }
     ],
     "288855": [
@@ -761,6 +766,11 @@
         "autor": "PortoEx",
         "texto": "Ansell verificando com o armazém a questão das etiquetas. Aguardando retorno para definição de como dar andamento",
         "data": "04/11/2026 18:03"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Questão das etiquetas resolvida. Aguardando retorno do cliente para a Ansell, confirmando se ainda aceitará o recebimento da mercadoria ou se será necessário seguir com a devolução.",
+        "data": "13/11/2026 10:18"
       }
     ],
     "305034": [
