@@ -283,6 +283,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando confirmação do valor para emitir a carta de extravio",
         "data": "04/11/2026 17:39"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Carta de extravio enviada, no aguardo da ND.",
+        "data": "13/11/2026 16:59"
       }
     ],
     "298613": [
@@ -924,6 +929,13 @@
         "autor": "PortoEx",
         "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 16/11.",
         "data": "13/11/2026 10:30"
+      }
+    ],
+    "308229": [
+      {
+        "autor": "PortoEx",
+        "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11",
+        "data": "13/11/2026 17:00"
       }
     ],
     "308503": [
