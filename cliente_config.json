@@ -872,6 +872,13 @@
         "data": "04/11/2026 18:19"
       }
     ],
+    "306892": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução para WS, previsão até o dia 07/12.",
+        "data": "18/11/2026 16:52"
+      }
+    ],
     "306917": [
       {
         "autor": "PortoEx",
@@ -945,6 +952,20 @@
         "data": "13/11/2026 10:41"
       }
     ],
+    "308970": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do cliente sobre a data de entrega.",
+        "data": "18/11/2026 16:49"
+      }
+    ],
+    "308972": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando retorno do cliente sobre a data de entrega.",
+        "data": "18/11/2026 16:49"
+      }
+    ],
     "309000": [
       {
         "autor": "PortoEx",
@@ -957,6 +978,11 @@
         "autor": "PortoEx",
         "texto": "Aguardando orientações da Ansell para definição de como prosseguir.",
         "data": "13/11/2026 10:45"
+      },
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução para WS, previsão até o dia 01/12",
+        "data": "18/11/2026 16:53"
       }
     ],
     "309950": [
@@ -966,11 +992,32 @@
         "data": "13/11/2026 10:42"
       }
     ],
+    "310283": [
+      {
+        "autor": "PortoEx",
+        "texto": "Aguardando orientações de como prosseguir",
+        "data": "18/11/2026 16:56"
+      }
+    ],
     "310314": [
       {
         "autor": "PortoEx",
         "texto": "Devolução autorizada pela Ansell, com agendamento confirmado na Wilson Sons para 13/11.",
         "data": "13/11/2026 10:47"
+      }
+    ],
+    "310327": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução para WS, previsão até 04/12.",
+        "data": "18/11/2026 16:57"
+      }
+    ],
+    "310582": [
+      {
+        "autor": "PortoEx",
+        "texto": "Em processo de devolução para WS, previsão para 23/11.",
+        "data": "18/11/2026 16:55"
       }
     ]
   },
